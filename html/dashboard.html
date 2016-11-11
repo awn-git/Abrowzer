@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="setting pages of Abrowzer">
+    <meta name="author" content="Awn">
+    <title>Abrowzer::ダッシュボード</title>
+    <!-- Bootstrap core CSS -->
+    <link href="../bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom styles for this template -->
+    <link href="../css/dashboard.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- header-->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">Abrowzer</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#">ダッシュボード</a></li>
+                    <li><a href="#">Abrowzerについて</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- /header-->
+    <!-- container-fluid-->
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2 sidebar">
+                <ul class="nav nav-sidebar">
+                    <li><a href="#ngconfig">NG設定</a></li>
+                    <li><a>　スレ</a></li>
+                    <li><a>　スレタイ</a></li>
+                </ul>
+                <ul class="nav nav-sidebar">
+                    <li><a href="#fav">お気に入り</a></li>
+                    <li><a>　板</a></li>
+                    <li><a>　スレ</a></li>
+                </ul>
+                <ul class="nav nav-sidebar">
+                    <li><a href="#history">履歴</a></li>
+                    <li><a>　板</a></li>
+                    <li><a>　スレ</a></li>
+                </ul>
+                <ul class="nav nav-sidebar">
+                    <li><a href="#other">その他</a></li>
+                </ul>
+            </div>
+            <!-- /sidebar-->
+            <!-- main-->
+            <div class="col-md-10 col-md-offset-2 main">
+                <form name="main">
+                    <div>
+                        <a name="ngconfig"><h1 class="invisible">NG設定</h1></a>
+                        <h1 class="page-header">NG設定</h1>
+                        <div>
+                            <h3 class="sub-header text-info">スレの動作設定</h3>
+                            <div>
+                                <label for="abonetype">あぼ〜んの種類は？：</label>
+                                <select id="abonetype" name="abonetype">
+                                    <option value="no">あぼ〜んしない</option>
+                                    <option value="normal">通常あぼ〜ん</option>
+                                    <option value="res">レスあぼ〜ん</option>
+                                    <option value="toumei">透明あぼ〜ん</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="imgurabone">imgur画像を非表示にする？：</label>
+                                <select id="imgurabone" name="imgurabone">
+                                    <option value="no">しない</option>
+                                    <option value="yes">する</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="oekakiabone">お絵かき画像を非表示にする？：</label>
+                                <select id="oekakiabone" name="oekakiabone">
+                                    <option value="no">しない</option>
+                                    <option value="yes">する</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="ngwords">NGワード：</label>
+                                <br>
+                                <textarea id="ngwords" name="ngwords" cols="40" rows="4" placeholder="改行区切りでキーワードを入力してください。"></textarea>
+                            </div>
+                            <div>
+                                <label for="ngnames">NGネーム：</label>
+                                <br>
+                                <textarea id="ngnames" name="ngnames" cols="40" rows="4" placeholder="改行区切りでキーワードを入力してください。"></textarea>
+                            </div>
+                            <div>
+                                <label for="ngmails">NGメール：</label>
+                                <br>
+                                <textarea id="ngmails" name="ngmails" cols="40" rows="4" placeholder="改行区切りでキーワードを入力してください。"></textarea>
+                            </div>
+                            <div>
+                                <label for="ngids">NGID：</label>
+                                <br>
+                                <textarea id="ngids" name="ngids" cols="40" rows="4" placeholder="改行区切りでキーワードを入力してください。"></textarea>
+                            </div>
+                            <div>
+                                <button type="button" id="sure-savebtn" class="btn btn-primary">スレの動作設定を保存</button>
+                            </div>
+                            <br>
+                            <br>
+                        </div>
+                        <div>
+                            <h3 class="sub-header text-info">スレタイの動作設定</h3>
+                            <div>
+                                <label for="suretaiabone">スレタイをあぼ〜んする？：</label>
+                                <select id="suretaiabone" name="suretaiabone">
+                                    <option value="no">しない</option>
+                                    <option value="yes">する</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="suretaikaigyou">スレタイ一覧を改行する？：</label>
+                                <select id="suretaikaigyou" name="suretaikaigyou">
+                                    <option value="no">しない</option>
+                                    <option value="yes">する</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="ngsuretai">NGスレタイ：</label>
+                                <br>
+                                <textarea id="ngsuretai" name="ngsuretai" cols="40" rows="4" placeholder="改行区切りでキーワードを入力してください。"></textarea>
+                            </div>
+                            <div>
+                                <button type="button" id="suretai-savebtn" class="btn btn-primary">スレタイの動作設定を保存</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <a name="fav"><h1 class="invisible">お気に入り</h1></a>
+                        <h1 class="page-header">お気に入り</h1>
+                        <h3 class="sub-header text-info">板</h3>
+                        <div id="favita"></div>
+                        <h3 class="sub-header text-info">スレ</h3>
+                        <div id="favsure"></div>
+                    </div>
+                    <div>
+                        <a name="history"><h1 class="invisible">履歴</h1></a>
+                        <h1 class="page-header">履歴</h1>
+                        <h3 class="sub-header text-info">訪問板</h3>
+                        <div id="hisita"></div>
+                        <div id="hisita-delete">
+                            <br>
+                            <input type='checkbox' name='hisitaall'>全部選択/解除</input>
+                            <button type="button" id="hisita-deletebtn" class="btn btn-danger" style="display:none">チェックした板を履歴から消す</button>
+                        </div>
+                        <h3 class="sub-header text-info">閲覧スレ</h3>
+                        <div id="hissure"></div>
+                        <div id="hissure-delete">
+                            <br>
+                            <input type='checkbox' name='hissureall'>全部選択/解除</input>
+                            <button type="button" id="hissure-deletebtn" class="btn btn-danger" style="display:none">チェックしたスレを履歴から消す</button>
+                        </div>
+                    </div>
+                    <div>
+                        <a name="other"><h1 class="invisible">その他</h1></a>
+                        <h1 class="page-header">その他</h1>
+                        <h3 class="sub-header text-info">スレ一覧に戻るリンク</h3>
+                        <div>
+                            <div>
+                                <label for="modoru">スレ一覧に戻るリンクをスレに表示する？：</label>
+                                <select id="modoru" name="modoru">
+                                    <option value="no">しない</option>
+                                    <option value="yes">する</option>
+                                </select>
+                            </div>
+                            <div>
+                                <button type="button" id="modoru-savebtn" class="btn btn-primary">スレ一覧に戻るリンクの表示設定を保存</button>
+                            </div>
+                            <br>
+                        </div>
+                        <h3 class="sub-header text-info">自動アク禁</h3>
+                        <div>
+                            <div>
+                                <label for="autoaku">自動アク禁する？：</label>
+                                <select id="autoaku" name="autoaku">
+                                    <option value="no">しない</option>
+                                    <option value="yes">する</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="autoakuwords">自動アク禁ワード：</label>
+                                <br>
+                                <textarea id="autoakuwords" name="autoakuwords" cols="40" rows="4" placeholder="※実装は未定です" readonly></textarea>
+                            </div>
+                            <div>
+                                <button type="button" id="autoaku-savebtn" class="btn btn-primary">自動アク禁の動作設定を保存</button>
+                            </div>
+                            <br>
+                        </div>
+                        <h3 class="sub-header text-info">設定の読み込み/書き出し</h3>
+                        <div>
+                            <div>
+                                <textarea id="configio" name="configio" cols="40" rows="4" placeholder="※実装は未定です" readonly></textarea>
+                            </div>
+                            <div>
+                                <button type="button" id="configio-savebtn" class="btn btn-primary">設定を読み込む</button>
+                                <button type="button" id="configio-loadbtn" class="btn btn btn-success">設定を書き出す</button>
+                            </div>
+                            <br>
+                        </div>
+                        <h3 class="sub-header text-info">初期化</h3>
+                        <div>
+                            <button type="button" id="init-btn" class="btn btn-danger">初期化する</button>
+                        </div>
+                        <br>
+                        <br>
+                    </div>
+            </div>
+            </form>
+            <!-- /main -->
+        </div>
+        <!-- /row -->
+    </div>
+    <!-- /container-fluid -->
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../bootstrap/js/jQuery.min.js"></script>
+    <script src="../bootstrap/js/bootstrap.min.js"></script>
+    <script src="../js/lib/holder.min.js"></script>
+    <script src="../js/dashboard.js"></script>
+</body>
+
+</html>
