@@ -121,6 +121,11 @@ window.bg = (function() {
             if (parm.dashboard) {
                 _updateBackgroundAndStorage(parm.dashboard);
             }
+
+            if (parm.history){
+                //alert("history");
+                _deleteHistory(parm.history);
+            }
             return;
         });
         return;
@@ -144,6 +149,12 @@ window.bg = (function() {
         for (var key in obj) {
             _bgobj.preserve.dashboard[key] = obj[key];
         };
+        _saveLocalStorage(_bgobj);
+        return;
+    }
+
+    function _deleteHistory(obj) {
+        _bgobj.preserve.history = obj;
         _saveLocalStorage(_bgobj);
         return;
     }

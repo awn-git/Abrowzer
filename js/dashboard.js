@@ -31,6 +31,7 @@
 
     /* private member */
     var form = document.forms.main;
+    var bg;
 
 
     /* initializer */
@@ -46,12 +47,15 @@
         _setSaveBtnEventListener("modoru-savebtn");
         _setChooseAllBtnEventListener("hisitaall");
         _setChooseAllBtnEventListener("hissureall");
+        _setHistoryDeleteBtnEventListener("hisita-deletebtn");
+        _setHistoryDeleteBtnEventListener("hissure-deletebtn");
         return;
     }
 
     function _setDashboard() {
         chrome.runtime.getBackgroundPage(function(backgroundPage) {
             var data = backgroundPage.bg.getBG();
+            bg = data;
             form.abonetype.value = data.preserve.dashboard.abonetype;
             form.imgurabone.value = data.preserve.dashboard.imgurabone;
             form.oekakiabone.value = data.preserve.dashboard.oekakiabone;
@@ -80,14 +84,15 @@
         var d = document;
         var divhisita = d.getElementById("hisita");
         var divhissure = d.getElementById("hissure");
-        var divhisitadelete = d.getElementById("hisita-deletebtn");
-        var divhissuredelete = d.getElementById("hissure-deletebtn");
+        var divhisitadelete = d.getElementById("hisita-delete");
+        var divhissuredelete = d.getElementById("hissure-delete");
 
         if (ita.length > 0) {
             for (var ix = 0, italen = ita.length; ix < italen; ix++) {
                 itastr += "<input type='checkbox' name='hisita'><a href = '" + ita[ix].url + "' target='_blank'>【" + ita[ix].bbsnameJ + "】</a></input><br>";
             }
-            divhisitadelete.setAttribute("style","display:block");
+            divhisitadelete.setAttribute("style", "display:block");
+
         } else {
             itastr = "<span>履歴、ありません。。</span>";
         }
@@ -97,7 +102,7 @@
             for (var ix = 0, surelen = sure.length; ix < surelen; ix++) {
                 surestr += "<input type='checkbox' name='hissure'>【" + sure[ix].bbsnameJ + "】<a href = '" + sure[ix].url + "l50' target='_blank'>" + sure[ix].suretai + "</a></input><br>";
             }
-            divhissuredelete.setAttribute("style","display:block");
+            divhissuredelete.setAttribute("style", "display:block");
         } else {
             surestr = "<span>履歴、ありません。。</span>";
         }
@@ -164,7 +169,7 @@
         return;
     }
 
-//debugger;//さくじょしょりかくのめんどうだね
+    //debugger;//さくじょしょりかくのめんどうだね
     function _deleteSomething() {
         for (var ix = 0; ix < form.main.hissure.length; ix++) {
             form.main.hissure[ix].checked ? check.push(ix) : undefined;
@@ -187,15 +192,49 @@
     }
 
 
-    function _setChooseAllBtnEventListener(name){
+    function _setChooseAllBtnEventListener(name) {
         var elm = document.getElementsByName(name)[0];
-        elm.addEventListener("change",function(){
+        elm.addEventListener("change", function() {
             var isElmChecked = elm.checked;
-            var inputbox = form[name.slice(0,-3)];
-            for(var ix = 0,len = inputbox.length; ix < len; ix++){
+            var inputbox = form[name.slice(0, -3)];
+            for (var ix = 0, len = inputbox.length; ix < len; ix++) {
                 inputbox[ix].checked = isElmChecked;
             }
         })
+    }
+
+    function _setHistoryDeleteBtnEventListener(id) {
+        var elm = document.getElementById(id);
+        var type = id.indexOf("ita") > -1 ? "ita" : "sure";
+
+        elm.addEventListener("click", function() {
+            var ans = confirm("削除しますか？");
+            if (ans) {
+                var data = type === "ita" ? document.forms.main.hisita : document.forms.main.hissure;
+                var cnt = 0;
+                if (data[0] !== undefined) {
+                    for (var ix = 0, len = data.length; ix < len; ix++) {
+                        if (data[ix].checked) {
+                            bg.preserve.history[type][ix].url = "delete";
+                            cnt++;
+                        }
+                    }
+                } else {
+                    if (data.checked) {
+                        bg.preserve.history[type][0].url = "delete";
+                        cnt++;
+                    }
+                }
+            }
+            if (cnt) {
+                var newhistory = bg.preserve.history[type].filter(function(elm) {
+                    return elm.url !== "delete";
+                });
+                bg.preserve.history[type] = newhistory;
+                _sendMessageToBackground({ history: bg.preserve.history });
+                location.reload();
+            }
+        });
     }
 
     /* public api */
