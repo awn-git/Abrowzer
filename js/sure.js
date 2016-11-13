@@ -69,6 +69,12 @@
             if (parm.oekakiabone === "yes") {
                 _doOekakiInvisible();
             }
+            if (parm.imgurabone === "normal") {
+                _doImgurNormalAbone();
+            }
+            if (parm.oekakiabone === "normal") {
+                _doOekakiNormalAbone();
+            }
             return;
         });
         return;
@@ -120,7 +126,52 @@
         return;
     }
 
+    //imgur画像の含まれるレスを通常あぼーんする
+    function _doImgurNormalAbone() {
+        var _path = _info.url;
+        _path = _path.substr(_path.indexOf("/test/"));
+        var imgur = document.querySelectorAll(".group");
+        var dd;
+        var dt;
+        var resnum;
 
+        for (var ix = 0, len = imgur.length; ix < len; ix++) {
+            if (dd = imgur[ix].parentElement) {
+                dt = dd.previousElementSibling;
+                resnum = dt.children[0].getAttribute("val") - 0;
+
+                dt.classList.add("Abrowzered");
+                dt.innerHTML = resnum + " ：" + "<font color='#1c740d'><b>あぼ〜ん</b></font>";
+                dd.innerHTML = "<span class='ank'><a rel='nofollow' target='_blank' href=" + _path + resnum + " class='anked'>[元のレス]</a></span>";
+            }
+        }
+        return;
+    }
+
+
+    //お絵描き画像の含まれるレスを通常あぼーんする
+    function _doOekakiNormalAbone() {
+        var _path = _info.url;
+        _path = _path.substr(_path.indexOf("/test/"));
+        var oekaki = document.querySelectorAll("a[pid]");
+        var dd;
+        var dt;
+        var resnum;
+
+        for (var ix = 0, len = oekaki.length; ix < len; ix++) {
+            if (dd = oekaki[ix].parentElement) {
+                dt = dd.previousSibling;
+                resnum = oekaki[ix].getAttribute("resnum");
+
+                dt.classList.add("Abrowzered");
+                dt.innerHTML = resnum + " ：" + "<font color='#1c740d'><b>あぼ〜ん</b></font>";
+                dd.innerHTML = "<span class='ank'><a rel='nofollow' target='_blank' href=" + _path + resnum + " class='anked'>[元のレス]</a></span>";
+            }
+        }
+        return;
+    }
+
+    
     //NGキーワードに基づくNG処理を実行する
     function _doNGs(nglist) {
         /* 処理概要
@@ -268,8 +319,6 @@
                 if (ngkeywords) {
                     var ngcheck;
                     var ngregs = _removeEmptyString(ngkeywords);
-
-                    ngregs = _removeEmptyString(ngkeywords);
                     ngregs = _generateReg(ngregs);
                     ngcheck = Op2SureObj.res.map(function(elm, ind) {
                         return ngregs.some(function(inelm) {

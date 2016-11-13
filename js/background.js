@@ -40,8 +40,6 @@ window.bg = (function() {
 
     /* private method */
     function _init() {
-        console.log("this is a background.js");
-
         _loadLocalStorage("preserve");
         _assignEventHandler();
         return;
@@ -59,7 +57,7 @@ window.bg = (function() {
             if (key in obj) { //objにkeyが存在するなら、objを_bgobjに格納
                 //                    _bgobj[key] = obj;
                 _bgobj = obj;
-            } else { //ないのであれば現在の_bgobjをストレージに保存(危険な気がする)。
+            } else { //ないのであれば現在の_bgobjをストレージに保存
                 //ここが呼ばれるのはストレージが空のとき。
                 _bgobj.preserve.dashboard = {
                     abonetype : "no",
@@ -76,7 +74,6 @@ window.bg = (function() {
                     autoaku : "no",
                     autoakuwords : ""
                     };
-                    console.log( _bgobj.preserve.dashboard );
                 _saveLocalStorage(_bgobj);
             }
             return;
@@ -90,7 +87,6 @@ window.bg = (function() {
         });
         return;
     }
-
 
     function _evaluateMessage() {
         chrome.runtime.onMessage.addListener(function(parm, sender) {
@@ -119,11 +115,10 @@ window.bg = (function() {
 
             //from dashboard
             if (parm.dashboard) {
-                _updateBackgroundAndStorage(parm.dashboard);
+                _updateDashboard(parm.dashboard);
             }
 
             if (parm.history){
-                //alert("history");
                 _deleteHistory(parm.history);
             }
             return;
@@ -144,8 +139,7 @@ window.bg = (function() {
         return;
     }
 
-
-    function _updateBackgroundAndStorage(obj) {
+    function _updateDashboard(obj) {
         for (var key in obj) {
             _bgobj.preserve.dashboard[key] = obj[key];
         };
@@ -162,7 +156,6 @@ window.bg = (function() {
     function _injectSure(parm, sender) {
         chrome.tabs.executeScript(sender.tab.id, { file: "js/sure.js" }, function(response) {
             _bgobj.temporary = response[0];
-            //_bgobj.preserve.history.sure.push(_bgobj.temporary);
             _storeHistory("sure",_bgobj.temporary);
             chrome.tabs.sendMessage(sender.tab.id, _bgobj.preserve.dashboard, function() {});
             return;
@@ -172,14 +165,11 @@ window.bg = (function() {
 
     function _doNGingInSure() {
         chrome.webRequest.onCompleted.addListener(function(response) {
-            //                chrome.tabs.executeScript(response.tabId, { file: "js/doNGingInSure.js" }, function() {
             chrome.tabs.sendMessage(response.tabId, _bgobj.preserve.dashboard, function() {});
-            //                });
             return;
         }, { urls: ["http://*.open2ch.net/ajax/get_res*"] });
         return;
     }
-
 
     function _injectSubback(parm, sender) {
         chrome.tabs.executeScript(sender.tab.id, { file: "js/subback.js" }, function(response) {
@@ -188,7 +178,6 @@ window.bg = (function() {
         });
         return;
     }
-
 
     function _injectItatop(parm, sender) {
         chrome.tabs.executeScript(sender.tab.id, { file: "js/itatop.js" }, function(response) {
@@ -225,7 +214,6 @@ window.bg = (function() {
         });
         return;
     }
-
 
     function _getBG() {
         return _bgobj;
