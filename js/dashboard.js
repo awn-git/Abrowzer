@@ -67,7 +67,7 @@
             form.ngsuretai.value = data.preserve.dashboard.ngsuretai;
             form.suretaikaigyou.value = data.preserve.dashboard.suretaikaigyou;
             form.modoru.value = data.preserve.dashboard.modoru;
-            form.autoaku.value = data.preserve.dashboard.autoaku;
+            //form.autoaku.value = data.preserve.dashboard.autoaku;
             //form.autoakuwords.value   = data.preserve.dashboard.autoakuwords;
 
             _setHistory(data.preserve.history);
@@ -135,8 +135,8 @@
         var _ngsuretai = form.ngsuretai.value;
         var _suretaikaigyou = form.suretaikaigyou.value;
         var _modoru = form.modoru.value;
-        var _autoaku = form.autoaku.value;
-        var _autoakuwords = form.autoakuwords.value;
+        //var _autoaku = form.autoaku.value;
+        //var _autoakuwords = form.autoakuwords.value;
 
         rtn = {
             suresavebtn: {
@@ -155,11 +155,13 @@
             },
             modorusavebtn: {
                 modoru: _modoru,
-            },
+            }
+/*
             autoakusavebtn: {
                 autoaku: _autoaku,
                 autoakuwords: _autoakuwords
             }
+*/
         };
         return rtn;
     }
@@ -169,7 +171,6 @@
         return;
     }
 
-    //debugger;//さくじょしょりかくのめんどうだね
     function _deleteSomething() {
         for (var ix = 0; ix < form.main.hissure.length; ix++) {
             form.main.hissure[ix].checked ? check.push(ix) : undefined;
