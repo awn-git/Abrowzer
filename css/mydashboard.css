@@ -1,0 +1,21 @@
+/*
+* mydashboard.css
+*/
+
+textarea {
+	width: 20em;
+	height:8em;
+	overflow:scroll;
+}
+
+#hisita  {
+	width: 80em;
+	height:8em;
+	overflow:scroll;
+}
+
+#hissure {
+	width: 80em;
+	height:16em;
+	overflow:scroll;
+}

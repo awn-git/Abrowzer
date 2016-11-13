@@ -10,6 +10,7 @@
     <link href="../bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom styles for this template -->
     <link href="../css/dashboard.css" rel="stylesheet">
+    <link href="../css/mydashboard.css" rel="stylesheet">
 </head>
 
 <body>
@@ -70,18 +71,28 @@
                                 </select>
                             </div>
                             <div>
-                                <label for="imgurabone">imgur画像を非表示にする？：</label>
+                                <label for="imgurabone">imgur画像は：</label>
                                 <select id="imgurabone" name="imgurabone">
-                                    <option value="no">しない</option>
-                                    <option value="yes">する</option>
+                                    <option value="no">表示する</option>
+                                    <option value="yes">画像のみ非表示にする</option>
+                                    <option value="normal">レスごと通常あぼ〜んする</option>
                                 </select>
                             </div>
                             <div>
-                                <label for="oekakiabone">お絵かき画像を非表示にする？：</label>
+                                <label for="oekakiabone">お絵かき画像は：</label>
                                 <select id="oekakiabone" name="oekakiabone">
-                                    <option value="no">しない</option>
-                                    <option value="yes">する</option>
+                                    <option value="no">表示する</option>
+                                    <option value="yes">画像のみ非表示にする</option>
+                                    <option value="normal">レスごと通常あぼ〜んする</option>
                                 </select>
+                            </div>
+                            <div>
+                                <label for="ngkeywordregexp">以下のキーワードは：</label>
+                                <select id="ngkeywordregexp" name="ngkeywordregexp">
+                                    <option value="no">単純なNGキーワードとして入力する</option>
+                                    <option value="yes">正規表現として入力する</option>
+                                </select>
+                                <small class="text-muted">(※正規表現って何？な人　→　<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Regular_Expressions" target="_blank">【MDN】正規表現</a>)</small>
                             </div>
                             <div>
                                 <label for="ngwords">NGワード：</label>
@@ -126,6 +137,13 @@
                                 </select>
                             </div>
                             <div>
+                                <label for="ngsuretairegexp">以下のキーワードは：</label>
+                                <select id="ngsuretairegexp" name="ngsuretairegexp">
+                                    <option value="no">単純なNGキーワードとして入力する</option>
+                                    <option value="yes">正規表現として入力する</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label for="ngsuretai">NGスレタイ：</label>
                                 <br>
                                 <textarea id="ngsuretai" name="ngsuretai" cols="40" rows="4" placeholder="改行区切りでキーワードを入力してください。"></textarea>
@@ -150,15 +168,21 @@
                         <div id="hisita"></div>
                         <div id="hisita-delete" style="display:none">
                             <br>
-                            <input type='checkbox' name='hisitaall'>全部選択/解除</input><br>
+                            <input type='checkbox' name='hisitaall'>全部選択/解除</input>
+                            <br>
                             <button type="button" id="hisita-deletebtn" class="btn btn-danger">チェックした板を履歴から消す</button>
                         </div>
                         <h3 class="sub-header text-info">閲覧スレ</h3>
                         <div id="hissure"></div>
                         <div id="hissure-delete" style="display:none">
                             <br>
-                            <input type='checkbox' name='hissureall'>全部選択/解除</input><br>
+                            <input type='checkbox' name='hissureall'>全部選択/解除</input>
+                            <br>
                             <button type="button" id="hissure-deletebtn" class="btn btn-danger">チェックしたスレを履歴から消す</button>
+                        </div>
+                        <h3 class="sub-header text-info">履歴＠おーぷん２ちゃんねる</h3>
+                        <div id="hisopen">
+                            <a href="http://open2ch.net/test/history.cgi" target="_blank">★おーぷん２ちゃんねるの履歴ページを開きます。</a>
                         </div>
                     </div>
                     <div>
@@ -178,6 +202,7 @@
                             </div>
                             <br>
                         </div>
+                        <!--
                         <h3 class="sub-header text-info">自動アク禁</h3>
                         <div>
                             <div>
@@ -197,6 +222,7 @@
                             </div>
                             <br>
                         </div>
+-->
                         <h3 class="sub-header text-info">設定の読み込み/書き出し</h3>
                         <div>
                             <div>
