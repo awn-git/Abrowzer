@@ -23,6 +23,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 window.bg = (function() {
+    var _debug = true;
     var _bgobj = {
         temporary: {},
         preserve: {
@@ -33,6 +34,30 @@ window.bg = (function() {
             dashboard: {}
         }
     };
+
+    var _defaultconfigs = {
+        abonetype: "no",
+        imgurabone: "no",
+        oekakiabone: "no",
+        ngwords: "",
+        ngnames: "",
+        ngmails: "",
+        ngids: "",
+        suretaiabone: "no",
+        suretaikaigyou: "no",
+        ngsuretai: "",
+        modoru: "no",
+        ngkeywordregexp: "no",
+        ngsuretairegexp: "no"
+    };
+
+    var _configs = [];
+    (function(){
+        for(var key in _defaultconfigs){
+            _configs.push(key);
+        }
+    });
+
 
     /* initializer */
     _init();
@@ -59,21 +84,7 @@ window.bg = (function() {
                 _bgobj = obj;
             } else { //ないのであれば現在の_bgobjをストレージに保存
                 //ここが呼ばれるのはストレージが空のとき。
-                _bgobj.preserve.dashboard = {
-                    abonetype : "no",
-                    imgurabone : "no",
-                    oekakiabone : "no",
-                    ngwords : "",
-                    ngnames : "",
-                    ngmails : "",
-                    ngids : "",
-                    suretaiabone : "no",
-                    suretaikaigyou : "no",
-                    ngsuretai : "",
-                    modoru : "no",
-                    autoaku : "no",
-                    autoakuwords : ""
-                    };
+                _bgobj.preserve.dashboard = _defaultconfigs;
                 _saveLocalStorage(_bgobj);
             }
             return;
@@ -118,7 +129,7 @@ window.bg = (function() {
                 _updateDashboard(parm.dashboard);
             }
 
-            if (parm.history){
+            if (parm.history) {
                 _deleteHistory(parm.history);
             }
             return;
@@ -134,6 +145,16 @@ window.bg = (function() {
                 }
                 return;
             });
+
+            if(_debug){
+                chrome.tabs.query({ title: "Abrowzer::Storage Monitor" }, function(response) {
+                    if(response.length === 0){
+                        chrome.tabs.create({ url: chrome.runtime.getURL("html/storagemonitor.html")},function(){});
+                    }
+                    return;
+            });
+            }
+
             return;
         });
         return;
@@ -156,7 +177,7 @@ window.bg = (function() {
     function _injectSure(parm, sender) {
         chrome.tabs.executeScript(sender.tab.id, { file: "js/sure.js" }, function(response) {
             _bgobj.temporary = response[0];
-            _storeHistory("sure",_bgobj.temporary);
+            _storeHistory("sure", _bgobj.temporary);
             chrome.tabs.sendMessage(sender.tab.id, _bgobj.preserve.dashboard, function() {});
             return;
         });
@@ -182,7 +203,7 @@ window.bg = (function() {
     function _injectItatop(parm, sender) {
         chrome.tabs.executeScript(sender.tab.id, { file: "js/itatop.js" }, function(response) {
             _bgobj.temporary = response[0];
-            _storeHistory("ita",_bgobj.temporary);
+            _storeHistory("ita", _bgobj.temporary);
             chrome.tabs.sendMessage(sender.tab.id, _bgobj.preserve.dashboard, function() {});
             return;
         });
@@ -193,15 +214,17 @@ window.bg = (function() {
         return;
     }
 
-    function _storeHistory(pagetype,temp){
+    function _storeHistory(pagetype, temp) {
         //pagetype = ita || sure
         var dupcheck = [];
         var isDup = true;
         //pagetypeに格納されているurlを取得する
-        dupcheck = _bgobj.preserve.history[pagetype].map(function(elm){return elm.url;});
-        isDup = dupcheck.some(function(elm){return elm === temp.url;});
-        if(!isDup){
-            _bgobj.preserve.history[pagetype].unshift( temp );
+        dupcheck = _bgobj.preserve.history[pagetype].map(function(elm) {
+            return elm.url; });
+        isDup = dupcheck.some(function(elm) {
+            return elm === temp.url; });
+        if (!isDup) {
+            _bgobj.preserve.history[pagetype].unshift(temp);
         }
         _saveLocalStorage(_bgobj);
         return;
@@ -219,9 +242,13 @@ window.bg = (function() {
         return _bgobj;
     }
 
+    function _getConfigs() {
+        return _configs;
+    }
+
     /* public api*/
     return {
-        bgobj: _bgobj,
+        getConfigs: _getConfigs,
         getBG: _getBG
     }
 })();
