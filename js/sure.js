@@ -54,6 +54,7 @@
         }
     }
 
+
     //Messageに応じて処理を実行する
     function _assignEventHandler() {
         chrome.runtime.onMessage.addListener(function(parm, sender, sendResponse) {
@@ -125,6 +126,7 @@
         }
         return;
     }
+
 
     //imgur画像の含まれるレスを通常あぼーんする
     function _doImgurNormalAbone() {
@@ -289,10 +291,17 @@
             var ngids = nglist.ngids !== "" ? nglist.ngids.split("\n") : undefined;
 
             //NGキーワードを正規表現化してtext|name|mail|idのそれぞれの要素に適用する
-            output = output.concat(_detectNG(ngwords, "text"));
-            output = output.concat(_detectNG(ngnames, "name"));
-            output = output.concat(_detectNG(ngmails, "mail"));
-            output = output.concat(_detectNG(ngids, "id"));
+            if(nglist.ngkeywordregexp === "yes"){
+                output = output.concat(_detectNG(ngwords, "text",_generateReg));
+                output = output.concat(_detectNG(ngnames, "name",_generateReg));
+                output = output.concat(_detectNG(ngmails, "mail",_generateReg));
+                output = output.concat(_detectNG(ngids, "id",_generateReg));                
+            }else{
+                output = output.concat(_detectNG(ngwords, "text",_escapeRegExp));
+                output = output.concat(_detectNG(ngnames, "name",_escapeRegExp));
+                output = output.concat(_detectNG(ngmails, "mail",_escapeRegExp));
+                output = output.concat(_detectNG(ngids, "id",_escapeRegExp));                
+            }
 
             //重複除去処理
             output = output.filter(function(elm, ind, arr) {
@@ -307,6 +316,14 @@
                 });
             }
 
+            //NGキーワードに含まれる正規表現をエスケープする関数
+            function _escapeRegExp(list) {
+                 return list.map(function(elm){
+                    var str = elm.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
+                    return new RegExp(str);
+                });
+            }
+
             //空文字列除去関数
             function _removeEmptyString(list) {
                 return list.filter(function(elm) {
@@ -314,12 +331,12 @@
                 });
             }
 
-            //NGキーワードを正規表現化してtext|name|mail|idのそれぞれの要素に適用する関数
-            function _detectNG(ngkeywords, type) {
+            //NGキーワードを正規表現化orエスケープしてtext|name|mail|idのそれぞれの要素に適用する関数
+            function _detectNG(ngkeywords, type, func) {
                 if (ngkeywords) {
                     var ngcheck;
                     var ngregs = _removeEmptyString(ngkeywords);
-                    ngregs = _generateReg(ngregs);
+                    ngregs = func(ngregs);
                     ngcheck = Op2SureObj.res.map(function(elm, ind) {
                         return ngregs.some(function(inelm) {
                             return inelm.test(elm[type]);
@@ -336,7 +353,6 @@
 
             return output;
         }
-
 
 
         function _execAbone() {

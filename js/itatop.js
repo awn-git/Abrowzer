@@ -60,7 +60,7 @@
         chrome.runtime.onMessage.addListener(function(parm, sender, sendResponse) {
 
             if (parm.suretaiabone === "yes") {
-                _suretaiaboned = _doSuretaiAbone(parm.ngsuretai);
+                _suretaiaboned = _doSuretaiAbone(parm.ngsuretai,parm.ngsuretairegexp);
             } else {
                 _suretaiaboned = _sures;
             }
@@ -76,13 +76,10 @@
         var _tail = kaigyou === "yes" ? "<br>" : "　";
         var str;
         var output = _suretaiaboned.map(function(elm) {
-            str = "<a href='" + elm.url + "'target='body'><t>" + elm.suretai + "</t></a>";
-            //str += "<span class='ank'><a rel='nofollow' href='" + elm.url.slice(0,-3) + "1' class='anked'>[#]</a>";
+            str = "<a href='" + elm.url + "'target='body'><t>" + elm.order + elm.suretai + "</t>" + elm.resamout + "</a>";
             str += _tail;
             return str;
         });
-
-        //_topThreads.innerHTMLを入れ替える。
         _topThreads.innerHTML = output.join("");
         return;
     }
@@ -95,12 +92,16 @@
         for (var ix = 0, len = d.length; ix < len; ix++) {
             if (ix < 18 && ix % 2 === 0) {
                 output.push({
-                    suretai: ((ix / 2) + 1 + "") + ":" + d[ix + 1].innerText,
+                    order : d[ix].childNodes[0].textContent,
+                    suretai: d[ix + 1].childNodes[0].innerText,
+                    resamout: d[ix + 1].childNodes[1].textContent,
                     url: d[ix].getAttribute("href")
                 });
             } else if (ix >= 18) {
                 output.push({
-                    suretai: d[ix].innerText,
+                    order : d[ix].childNodes[0].textContent,
+                    suretai: d[ix].childNodes[1].innerText,
+                    resamout:d[ix].childNodes[2].textContent,
                     url: d[ix].getAttribute("href")
                 });
             }
@@ -118,7 +119,7 @@
     }
 
 
-    function _doSuretaiAbone(list) {
+    function _doSuretaiAbone(list,isRegExp) {
         //改行で分割 -> 配列
         nglist = list.split("\n");
 
@@ -128,9 +129,17 @@
         });
 
         //正規表現化
-        var ngregs = nglist.map(function(elm) {
-            return new RegExp(elm);
-        });
+        if (isRegExp === "yes") {
+            var ngregs = nglist.map(function(elm) {
+                return new RegExp(elm);
+            });
+
+        } else {
+            var ngregs = nglist.map(function(elm) {
+                var str = elm.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
+                return new RegExp(str);
+            });
+        }
 
         //正規表現を適用する
         var output = _sures.filter(function(elm) {
