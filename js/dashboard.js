@@ -21,17 +21,30 @@
 //-20xxxxxx(ver 1.0.0) : 新規作成
 //
 ////////////////////////////////////////////////////////////////////////////////
-
-/*
-    dashboard.jsの機能
-        - ページが開いたら、データを読み込む
-        - ボタンを押したら、データを書き込む
-*/
 (function() {
-
     /* private member */
-    var form = document.forms.main;
-    var bg;
+    var bg; //backgroundの_bgobj
+    var configs;
+    var suresavebtn = {
+        "abonetype": null,
+        "imgurabone": null,
+        "oekakiabone": null,
+        "ngkeywordregexp": null,
+        "ngwords": null,
+        "ngnames": null,
+        "ngmails": null,
+        "ngids": null
+    };
+    var suretaisavebtn = {
+        "suretaiabone": null,
+        "suretaikaigyou": null,
+        "ngsuretai": null,
+        "ngsuretairegexp": null
+    }
+    var modorusavebtn = {
+        "modoru": null
+    };
+
 
 
     /* initializer */
@@ -39,12 +52,16 @@
 
 
     /* private method */
+    function _getForm(parm) {
+        return document.forms[parm];
+    }
+
+
     function _init() {
         _setDashboard();
-        _setSaveBtnEventListener("sure-savebtn");
-        _setSaveBtnEventListener("suretai-savebtn");
-        //_setSaveBtnEventListener("autoaku-savebtn");
-        _setSaveBtnEventListener("modoru-savebtn");
+        _setSaveBtnEventListener("sure-savebtn", suresavebtn, _checkSureRegexp);
+        _setSaveBtnEventListener("suretai-savebtn", suretaisavebtn, _checkSuretaiRegexp);
+        _setSaveBtnEventListener("modoru-savebtn", modorusavebtn, function(inp) {return inp;});
         _setChooseAllBtnEventListener("hisitaall");
         _setChooseAllBtnEventListener("hissureall");
         _setHistoryDeleteBtnEventListener("hisita-deletebtn");
@@ -52,156 +69,166 @@
         return;
     }
 
+
     function _setDashboard() {
         chrome.runtime.getBackgroundPage(function(backgroundPage) {
-            var data = backgroundPage.bg.getBG();
-            bg = data;
-            form.abonetype.value = data.preserve.dashboard.abonetype;
-            form.imgurabone.value = data.preserve.dashboard.imgurabone;
-            form.oekakiabone.value = data.preserve.dashboard.oekakiabone;
-            form.ngwords.value = data.preserve.dashboard.ngwords;
-            form.ngnames.value = data.preserve.dashboard.ngnames;
-            form.ngmails.value = data.preserve.dashboard.ngmails;
-            form.ngids.value = data.preserve.dashboard.ngids;
-            form.suretaiabone.value = data.preserve.dashboard.suretaiabone;
-            form.ngsuretai.value = data.preserve.dashboard.ngsuretai;
-            form.suretaikaigyou.value = data.preserve.dashboard.suretaikaigyou;
-            form.modoru.value = data.preserve.dashboard.modoru;
-            //form.autoaku.value = data.preserve.dashboard.autoaku;
-            //form.autoakuwords.value   = data.preserve.dashboard.autoakuwords;
+            bg = backgroundPage.bg.getBG();
+            configs = backgroundPage.bg.getConfigs();
 
-            _setHistory(data.preserve.history);
-
+            _setConfig(bg.preserve.dashboard);
+            //_setFavorite(bg.preserve.faborite);
+            _setHistory(bg.preserve.history);
         });
         return;
     }
 
-    function _setHistory(his) {
-        var ita = his.ita; //array
-        var sure = his.sure; //array
-        var itastr = "";
-        var surestr = "";
-        var d = document;
-        var divhisita = d.getElementById("hisita");
-        var divhissure = d.getElementById("hissure");
-        var divhisitadelete = d.getElementById("hisita-delete");
-        var divhissuredelete = d.getElementById("hissure-delete");
 
-        if (ita.length > 0) {
-            for (var ix = 0, italen = ita.length; ix < italen; ix++) {
-                itastr += "<input type='checkbox' name='hisita'><a href = '" + ita[ix].url + "' target='_blank'>【" + ita[ix].bbsnameJ + "】</a></input><br>";
-            }
-            divhisitadelete.setAttribute("style", "display:block");
-
-        } else {
-            itastr = "<span>履歴、ありません。。</span>";
+    function _setConfig(das) {
+        var form = _getForm("main");
+        for (var key in das) {
+            form[key].value = das[key];
         }
-
-
-        if (sure.length > 0) {
-            for (var ix = 0, surelen = sure.length; ix < surelen; ix++) {
-                surestr += "<input type='checkbox' name='hissure'>【" + sure[ix].bbsnameJ + "】<a href = '" + sure[ix].url + "l50' target='_blank'>" + sure[ix].suretai + "</a></input><br>";
-            }
-            divhissuredelete.setAttribute("style", "display:block");
-        } else {
-            surestr = "<span>履歴、ありません。。</span>";
-        }
-
-
-
-        divhisita.innerHTML = itastr;
-        divhissure.innerHTML = surestr;
-
-
         return;
     }
 
-    function _getFormValues() {
-        /* [今北産業]
-            - formの
-            - 値を
-            - 取得する
-        */
-        var rtn = {};
-        var form = document.forms.main;
-        var _abonetype = form.abonetype.value;
-        var _imgurabone = form.imgurabone.value;
-        var _oekakiabone = form.oekakiabone.value;
-        var _ngwords = form.ngwords.value;
-        var _ngnames = form.ngnames.value;
-        var _ngmails = form.ngmails.value;
-        var _ngids = form.ngids.value;
-        var _suretaiabone = form.suretaiabone.value;
-        var _ngsuretai = form.ngsuretai.value;
-        var _suretaikaigyou = form.suretaikaigyou.value;
-        var _modoru = form.modoru.value;
-        //var _autoaku = form.autoaku.value;
-        //var _autoakuwords = form.autoakuwords.value;
 
-        rtn = {
-            suresavebtn: {
-                abonetype: _abonetype,
-                imgurabone: _imgurabone,
-                oekakiabone: _oekakiabone,
-                ngwords: _ngwords,
-                ngnames: _ngnames,
-                ngmails: _ngmails,
-                ngids: _ngids,
-            },
-            suretaisavebtn: {
-                suretaiabone: _suretaiabone,
-                suretaikaigyou: _suretaikaigyou,
-                ngsuretai: _ngsuretai,
-            },
-            modorusavebtn: {
-                modoru: _modoru,
+    function _generateHistoryTexts(data, name) {
+        var data;
+        var output;
+        if (data.length) {
+            var str;
+            if (name === "hisita") {
+                output = data.map(function(elm) {
+                    str = "<input type='checkbox' name='hisita'><a href = '" + elm.url + "' target='_blank'>【" + elm.bbsnameJ + "】</a></input><br>";
+                    return str;
+                });
+            } else {
+                output = data.map(function(elm) {
+                    str = "<input type='checkbox' name='hissure'>【" + elm.bbsnameJ + "】<a href = '" + elm.url + "l50' target='_blank'>" + elm.suretai + "</a></input><br>";
+                    return str;
+                });
             }
-/*
-            autoakusavebtn: {
-                autoaku: _autoaku,
-                autoakuwords: _autoakuwords
-            }
-*/
-        };
-        return rtn;
+            output = output.join("");
+        } else {
+            output = "<span>履歴、ありません。。</span>";
+        }
+        return output;
     }
+
+
+    function _setHistory(his) {
+        var itahtml = _generateHistoryTexts(his.ita, "hisita");
+        var surehtml = _generateHistoryTexts(his.sure, "hissure");
+        var d = document;
+
+        d.getElementById("hisita").innerHTML = itahtml;
+        d.getElementById("hissure").innerHTML = surehtml;
+
+        if (his.ita.length) {
+            d.getElementById("hisita-delete").setAttribute("style", "display:block");
+        }
+        if (his.sure.length) {
+            d.getElementById("hissure-delete").setAttribute("style", "display:block");
+        }
+        return;
+    }
+
 
     function _sendMessageToBackground(parm) {
         chrome.runtime.sendMessage(parm);
         return;
     }
 
-    function _deleteSomething() {
-        for (var ix = 0; ix < form.main.hissure.length; ix++) {
-            form.main.hissure[ix].checked ? check.push(ix) : undefined;
-        }
+
+    function _setSaveBtnEventListener(id, obj, func) {
+        var elm = document.getElementById(id);
+        elm.addEventListener("click", function() {
+            if (confirm("保存しますか？")) {
+                var form = _getForm("main");
+                for (var key in obj) {
+                    obj[key] = form[key].value;
+                }
+                var message = func(obj);
+                if (message) {
+                    _sendMessageToBackground({ dashboard: message });
+                }
+            }
+            return;
+        });
         return;
     }
 
 
-    function _setSaveBtnEventListener(id) {
-        var elm = document.getElementById(id);
-        elm.addEventListener("click", function() {
-            var ans = confirm("保存しますか？");
-            if (ans) {
-                var data = _getFormValues();
-                var key = id.split("-").join("");
-                var mes = data[key];
-                _sendMessageToBackground({ dashboard: mes });
+    function _checkSureRegexp(obj) {
+        if (obj.ngkeywordregexp === "yes") {
+            try {
+                obj["ngwords"].split("\n").filter(function(elm) {
+                    return elm !== "";
+                }).map(function(elm) {
+                    return new RegExp(elm);
+                });
+                obj["ngmails"].split("\n").filter(function(elm) {
+                    return elm !== "";
+                }).map(function(elm) {
+                    return new RegExp(elm);
+                });
+                obj["ngnames"].split("\n").filter(function(elm) {
+                    return elm !== "";
+                }).map(function(elm) {
+                    return new RegExp(elm);
+                });
+                obj["ngids"].split("\n").filter(function(elm) {
+                    return elm !== "";
+                }).map(function(elm) {
+                    return new RegExp(elm);
+                });
+            } catch (e) {
+                alert("正規表現が間違っているようです");
+                return false;
             }
-        });
+            return obj;
+        } else {
+            return obj;
+        }
     }
 
 
-    function _setChooseAllBtnEventListener(name) {
-        var elm = document.getElementsByName(name)[0];
+    function _checkSuretaiRegexp(obj) {
+        if (obj.ngsuretairegexp === "yes") {
+            try {
+                obj["ngsuretai"].split("\n").filter(function(elm) {
+                    return elm !== "";
+                }).map(function(elm) {
+                    return new RegExp(elm);
+                });
+            } catch (e) {
+                alert("正規表現が間違っているようです");
+                return false;
+            }
+            return obj;
+        } else {
+            return obj;
+        }
+    }
+
+    function _setChooseAllBtnEventListener(id) {
+        var elm = document.getElementById(id);
+        var type = id.indexOf("ita") > -1 ? "ita" : "sure";
+
         elm.addEventListener("change", function() {
             var isElmChecked = elm.checked;
-            var inputbox = form[name.slice(0, -3)];
-            for (var ix = 0, len = inputbox.length; ix < len; ix++) {
-                inputbox[ix].checked = isElmChecked;
+            var data = _getForm("main")[("his" + type)];
+
+            if (data.length) {
+                for (var ix = 0, len = data.length; ix < len; ix++) {
+                    data[ix].checked = isElmChecked;
+                }
+            }else{
+                data.checked = isElmChecked;
             }
-        })
+            return;
+        });
+        return;
     }
 
     function _setHistoryDeleteBtnEventListener(id) {
@@ -209,11 +236,11 @@
         var type = id.indexOf("ita") > -1 ? "ita" : "sure";
 
         elm.addEventListener("click", function() {
-            var ans = confirm("削除しますか？");
-            if (ans) {
-                var data = type === "ita" ? document.forms.main.hisita : document.forms.main.hissure;
+            if (confirm("テストしますか？")) {
+                var data = _getForm("main")[("his" + type)];
                 var cnt = 0;
-                if (data[0] !== undefined) {
+
+                if (data.length) {
                     for (var ix = 0, len = data.length; ix < len; ix++) {
                         if (data[ix].checked) {
                             bg.preserve.history[type][ix].url = "delete";
@@ -226,19 +253,22 @@
                         cnt++;
                     }
                 }
+
+                if (cnt) {
+                    var newhistory = bg.preserve.history[type].filter(function(elm) {
+                        return elm.url !== "delete";
+                    });
+                    bg.preserve.history[type] = newhistory;
+                    _sendMessageToBackground({ history: bg.preserve.history });
+                    location.reload();
+                }
             }
-            if (cnt) {
-                var newhistory = bg.preserve.history[type].filter(function(elm) {
-                    return elm.url !== "delete";
-                });
-                bg.preserve.history[type] = newhistory;
-                _sendMessageToBackground({ history: bg.preserve.history });
-                location.reload();
-            }
+            return;
         });
+        return;
     }
 
-    /* public api */
 
+    /* public api */
     return;
 })();
