@@ -236,7 +236,7 @@
         var type = id.indexOf("ita") > -1 ? "ita" : "sure";
 
         elm.addEventListener("click", function() {
-            if (confirm("テストしますか？")) {
+            if (confirm("削除しますか？")) {
                 var data = _getForm("main")[("his" + type)];
                 var cnt = 0;
 
