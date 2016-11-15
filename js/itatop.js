@@ -76,7 +76,7 @@
         var _tail = kaigyou === "yes" ? "<br>" : "　";
         var str;
         var output = _suretaiaboned.map(function(elm) {
-            str = "<a href='" + elm.url + "'target='body'><t>" + elm.order + elm.suretai + "</t>" + elm.resamout + "</a>";
+            str = "<a href='" + elm.url + "'target='body'><t>" + elm.order + elm.suretai + "</t>" + elm.resamount + "</a>";
             str += _tail;
             return str;
         });
@@ -94,14 +94,14 @@
                 output.push({
                     order : d[ix].childNodes[0].textContent,
                     suretai: d[ix + 1].childNodes[0].innerText,
-                    resamout: d[ix + 1].childNodes[1].textContent,
+                    resamount: d[ix + 1].childNodes[1].textContent,
                     url: d[ix].getAttribute("href")
                 });
             } else if (ix >= 18) {
                 output.push({
                     order : d[ix].childNodes[0].textContent,
                     suretai: d[ix].childNodes[1].innerText,
-                    resamout:d[ix].childNodes[2].textContent,
+                    resamount:d[ix].childNodes[2].textContent,
                     url: d[ix].getAttribute("href")
                 });
             }

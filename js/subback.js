@@ -27,44 +27,114 @@
 (function() {
     //member
     var _info = {};
+    var _sures;
+    var _suretaiaboned;
 
     //init
     _init();
 
     //method
     function _init() {
+        _info = _getPageInfo();
         _assignEventHandler();
+        _sures = _trimThreads();
         return;
     }
 
     function _assignEventHandler() {
         chrome.runtime.onMessage.addListener(function(parm, sender, sendResponse) {
-            if (parm.suretaikaigyou === "yes") {
-                _doSuretaiKaigyou();
-            }
             if (parm.suretaiabone === "yes") {
-                _doSuretaiAbone();
+                _suretaiaboned = _doSuretaiAbone(parm.ngsuretai, parm.ngsuretairegexp);
+            } else {
+                _suretaiaboned = _sures;
             }
+            if (parm.suretaiabone === "yes" || parm.suretaikaigyou === "yes") {
+                _replaceTopThreads(parm.suretaikaigyou);
+                _addLinks();
+            }
+
         });
         return;
     }
 
-    function _doSuretaiKaigyou() {
-        var d = document.getElementsByTagName("a");
-        var dlen = d.length;
+    function _getPageInfo() {
+        var _url = location.href;
+        var _bbsname = location.pathname.split("/")[1];
+        var _bbsnameJ = document.title.split("＠")[0];
+
+        return {
+            url: _url,
+            bbsname: _bbsname,
+            bbsnameJ: _bbsnameJ
+        }
+    }
+
+    function _trimThreads() {
+        var d = document.querySelectorAll("a");
+        var output = [];
         var temp;
-        for (var ix = 0; ix < dlen; ix++) {
-            temp = d[ix].outerHTML;
-            temp += "<br>";
-            d[ix].outerHTML = temp;
+        for (var ix = 0, len = d.length; ix < len; ix++) {
+            temp = d[ix].innerText;
+            output.push({
+                order: temp.match(/^[0-9].*: /)[0],
+                suretai: temp.match(/^.*: (.*) \([0-9].*\)$/)[1],
+                resamount: temp.match(/ \([0-9].*\)$/)[0],
+                url: d[ix].getAttribute("href")
+            });
+        }
+        return output;
+    }
+
+    function _doSuretaiAbone(list, isRegExp) {
+        //改行で分割 -> 配列
+        nglist = list.split("\n");
+
+        //空白除去
+        nglist = nglist.filter(function(elm) {
+            return elm !== "";
+        });
+
+        //正規表現化
+        if (isRegExp === "yes") {
+            var ngregs = nglist.map(function(elm) {
+                return new RegExp(elm);
+            });
+
+        } else {
+            var ngregs = nglist.map(function(elm) {
+                var str = elm.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
+                return new RegExp(str);
+            });
         }
 
-        var _pathname = location.pathname;
-        var _bbsname = _pathname.split("/")[1];
+        //正規表現を適用する
+        var output = _sures.filter(function(elm) {
+            return !ngregs.some(function(inelm) {
+                return inelm.test(elm.suretai);
+            });
+        });
+
+        return output;
+    }
+
+    function _replaceTopThreads(kaigyou) {
+        var _tail = kaigyou === "yes" ? "<br>" : "　";
+        var str;
+        var output = _suretaiaboned.map(function(elm) {
+            str = "<a href='" + elm.url + "'target='body'><t>" + elm.order + elm.suretai + "</t>" + elm.resamount + "</a>";
+            str += _tail;
+            return str;
+        });
+        document.querySelector("small#trad").innerHTML = output.join("");
+
+        return;
+    }
+
+    function _addLinks() {
         var _newdiv = document.createElement("div");
 
         _newdiv.classList.add("Abrowzered");
-        _newdiv.innerHTML = "<a href=/" + _bbsname + "/kako/>★過去ログ</a><br><a href=/" + _bbsname + "/>★板に戻る</a><br><a href=/" + _bbsname + "/gomi.html >★ごみ箱(仮)</a><hr>";
+        _newdiv.innerHTML = "<a href=/" + _info.bbsname + "/kako/>★過去ログ</a><br><a href=/" + _info.bbsname + "/>★板に戻る</a><br><a href=/" + _info.bbsname + "/gomi.html >★ごみ箱(仮)</a><hr>";
 
         var _div = document.getElementsByTagName("div")[0];
         var _small = document.getElementById("trad");
@@ -73,10 +143,7 @@
         return;
     }
 
-    function _dosuretaiAbone() {
-        return;
-    }
-
-    //return
-    return;
+    return {
+        info : _info
+    };
 })();
