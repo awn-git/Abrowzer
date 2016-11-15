@@ -56,7 +56,7 @@ window.bg = (function() {
         for(var key in _defaultconfigs){
             _configs.push(key);
         }
-    });
+    })();
 
 
     /* initializer */
@@ -244,8 +244,13 @@ window.bg = (function() {
         return _configs;
     }
 
+    function _getDefaultConfigs(){
+        return _defaultconfigs;
+    }
+
     /* public api*/
     return {
+        getDefaultConfigs: _getDefaultConfigs,
         getConfigs: _getConfigs,
         getBG: _getBG
     }
