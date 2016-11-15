@@ -25,6 +25,8 @@
     /* private member */
     var bg; //backgroundの_bgobj
     var configs;
+    var defaultconfigs;
+
     var suresavebtn = {
         "abonetype": null,
         "imgurabone": null,
@@ -66,6 +68,7 @@
         _setChooseAllBtnEventListener("hissureall");
         _setHistoryDeleteBtnEventListener("hisita-deletebtn");
         _setHistoryDeleteBtnEventListener("hissure-deletebtn");
+        _setInitBtnEventListener("init-btn");
         return;
     }
 
@@ -74,6 +77,7 @@
         chrome.runtime.getBackgroundPage(function(backgroundPage) {
             bg = backgroundPage.bg.getBG();
             configs = backgroundPage.bg.getConfigs();
+            defaultconfigs = backgroundPage.bg.getDefaultConfigs();
 
             _setConfig(bg.preserve.dashboard);
             //_setFavorite(bg.preserve.faborite);
@@ -268,6 +272,21 @@
         return;
     }
 
+    function _setInitBtnEventListener(id){
+        var elm = document.getElementById(id);
+
+        elm.addEventListener("click",function(){
+            if( confirm("初期化しますか？") ){
+                var form = _getForm("main");
+                for(var key in defaultconfigs){
+                    form[key].value = defaultconfigs[key];
+                }
+                _sendMessageToBackground({ dashboard: defaultconfigs});
+            }
+            return;
+        });
+        return;
+    }
 
     /* public api */
     return;
