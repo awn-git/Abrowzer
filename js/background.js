@@ -79,11 +79,9 @@ window.bg = (function() {
 
     function _loadLocalStorage(key) {
         chrome.storage.local.get(key, function(obj) {
-            if (key in obj) { //objにkeyが存在するなら、objを_bgobjに格納
-                //                    _bgobj[key] = obj;
+            if (key in obj) {
                 _bgobj = obj;
-            } else { //ないのであれば現在の_bgobjをストレージに保存
-                //ここが呼ばれるのはストレージが空のとき。
+            } else {
                 _bgobj.preserve.dashboard = _defaultconfigs;
                 _saveLocalStorage(_bgobj);
             }
@@ -93,7 +91,7 @@ window.bg = (function() {
     }
 
     function _saveLocalStorage(obj) {
-        chrome.storage.local.set(obj, function(parm) {
+        chrome.storage.local.set(obj, function() {
             return;
         });
         return;
