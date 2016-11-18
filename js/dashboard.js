@@ -63,12 +63,27 @@
         _setDashboard();
         _setSaveBtnEventListener("sure-savebtn", suresavebtn, _checkSureRegexp);
         _setSaveBtnEventListener("suretai-savebtn", suretaisavebtn, _checkSuretaiRegexp);
-        _setSaveBtnEventListener("modoru-savebtn", modorusavebtn, function(inp) {return inp;});
-        _setChooseAllBtnEventListener("hisitaall");
-        _setChooseAllBtnEventListener("hissureall");
+        _setSaveBtnEventListener("modoru-savebtn", modorusavebtn, function(inp) {
+            return inp;
+        });
+
+        _setChooseAllBtnEventListener("hisitaall", "his");
+        _setChooseAllBtnEventListener("hissureall", "his");
         _setHistoryDeleteBtnEventListener("hisita-deletebtn");
         _setHistoryDeleteBtnEventListener("hissure-deletebtn");
+
+        _setChooseAllBtnEventListener("favitaall", "fav");
+        _setChooseAllBtnEventListener("favsureall", "fav");
+
+        _setFavoriteDeleteBtnEventListener("favita-deletebtn");
+        _setFavoriteDeleteBtnEventListener("favsure-deletebtn");
+
+
         _setInitBtnEventListener("init-btn");
+        _loadConfig("configio-loadbtn");
+        _saveConfig("configio-savebtn");
+
+        _chooseAll("configio");
         return;
     }
 
@@ -80,7 +95,7 @@
             defaultconfigs = backgroundPage.bg.getDefaultConfigs();
 
             _setConfig(bg.preserve.dashboard);
-            //_setFavorite(bg.preserve.faborite);
+            _setFavorite(bg.preserve.favorite);
             _setHistory(bg.preserve.history);
         });
         return;
@@ -101,14 +116,14 @@
         var output;
         if (data.length) {
             var str;
-            if (name === "hisita") {
+            if (name.indexOf("ita") > -1) {
                 output = data.map(function(elm) {
-                    str = "<input type='checkbox' name='hisita'><a href = '" + elm.url + "' target='_blank'>【" + elm.bbsnameJ + "】</a></input><br>";
+                    str = "<input type='checkbox' name='" + name + "'><a href = '" + elm.url + "' target='_blank'>【" + elm.bbsnameJ + "】</a></input><br>";
                     return str;
                 });
             } else {
                 output = data.map(function(elm) {
-                    str = "<input type='checkbox' name='hissure'>【" + elm.bbsnameJ + "】<a href = '" + elm.url + "l50' target='_blank'>" + elm.suretai + "</a></input><br>";
+                    str = "<input type='checkbox' name='" + name + "'>【" + elm.bbsnameJ + "】<a href = '" + elm.url + "l50' target='_blank'>" + elm.suretai + "</a></input><br>";
                     return str;
                 });
             }
@@ -133,6 +148,23 @@
         }
         if (his.sure.length) {
             d.getElementById("hissure-delete").setAttribute("style", "display:block");
+        }
+        return;
+    }
+
+    function _setFavorite(fav) {
+        var itahtml = _generateHistoryTexts(fav.ita, "favita");
+        var surehtml = _generateHistoryTexts(fav.sure, "favsure");
+        var d = document;
+
+        d.getElementById("favita").innerHTML = itahtml;
+        d.getElementById("favsure").innerHTML = surehtml;
+
+        if (fav.ita.length) {
+            d.getElementById("favita-delete").setAttribute("style", "display:block");
+        }
+        if (fav.sure.length) {
+            d.getElementById("favsure-delete").setAttribute("style", "display:block");
         }
         return;
     }
@@ -215,19 +247,19 @@
         }
     }
 
-    function _setChooseAllBtnEventListener(id) {
+    function _setChooseAllBtnEventListener(id, category) {
         var elm = document.getElementById(id);
         var type = id.indexOf("ita") > -1 ? "ita" : "sure";
 
         elm.addEventListener("change", function() {
             var isElmChecked = elm.checked;
-            var data = _getForm("main")[("his" + type)];
+            var data = _getForm("main")[(category + type)];
 
             if (data.length) {
                 for (var ix = 0, len = data.length; ix < len; ix++) {
                     data[ix].checked = isElmChecked;
                 }
-            }else{
+            } else {
                 data.checked = isElmChecked;
             }
             return;
@@ -272,18 +304,139 @@
         return;
     }
 
-    function _setInitBtnEventListener(id){
+    function _setInitBtnEventListener(id) {
         var elm = document.getElementById(id);
 
-        elm.addEventListener("click",function(){
-            if( confirm("初期化しますか？") ){
+        elm.addEventListener("click", function() {
+            if (confirm("初期化しますか？")) {
                 var form = _getForm("main");
-                for(var key in defaultconfigs){
+                for (var key in defaultconfigs) {
                     form[key].value = defaultconfigs[key];
                 }
-                _sendMessageToBackground({ dashboard: defaultconfigs});
+                _sendMessageToBackground({ dashboard: defaultconfigs });
             }
             return;
+        });
+        return;
+    }
+
+
+    function _setFavoriteDeleteBtnEventListener(id) {
+        var elm = document.getElementById(id);
+        var type = id.indexOf("ita") > -1 ? "ita" : "sure";
+
+        elm.addEventListener("click", function() {
+            if (confirm("削除しますか？")) {
+                var data = _getForm("main")[("fav" + type)];
+                var cnt = 0;
+
+                if (data.length) {
+                    for (var ix = 0, len = data.length; ix < len; ix++) {
+                        if (data[ix].checked) {
+                            bg.preserve.favorite[type][ix].url = "delete";
+                            cnt++;
+                        }
+                    }
+                } else {
+                    if (data.checked) {
+                        bg.preserve.favorite[type][0].url = "delete";
+                        cnt++;
+                    }
+                }
+
+                if (cnt) {
+                    var newfavorite = bg.preserve.favorite[type].filter(function(elm) {
+                        return elm.url !== "delete";
+                    });
+                    bg.preserve.favorite[type] = newfavorite;
+                    _sendMessageToBackground({ favorite: bg.preserve.favorite });
+                    location.reload();
+                }
+            }
+            return;
+        });
+        return;
+    }
+
+    function _loadConfig(id) {
+        var elm = document.getElementById(id);
+        var textarea = document.getElementById("configio");
+        elm.addEventListener("click", function() {
+            var myconfigJ = JSON.stringify(bg.preserve.dashboard);
+            textarea.value = myconfigJ;
+            return;
+        });
+        return;
+    }
+
+    function _saveConfig(id) {
+        var elm = document.getElementById(id);
+        var textarea = document.getElementById("configio");
+        elm.addEventListener("click", function() {
+
+            var myconfigJ = textarea.value.trim();
+            console.dir(myconfig);
+            console.dir(defaultconfigs);
+            
+            //未入力ならば終了
+            if(textarea.value.trim() === ""){
+                alert("何も入力されていないみたいです。。");
+                return;
+            }
+            
+            //JSON文字列でないなら終了
+            try { var myconfig = JSON.parse(myconfigJ);} catch (e) { 
+                alert("入力文字列の形式がおかしいです。。");
+                return;
+            }
+
+            //2つのkey集合が全単写でないなら終了
+            var myconkeys = Object.keys(myconfig);
+            var defaultkeys = Object.keys(defaultconfigs);
+            var isPropSame_m2d = false, isPropSame_d2m = false;
+            isPropSame_m2d = defaultkeys.every(function(elm) {return myconkeys.find(function(inelm) {return inelm === elm; }) });
+            isPropSame_d2m = myconkeys.every(function(elm){return defaultkeys.find(function(inelm){return inelm === elm;})});
+
+            if(!(isPropSame_m2d && isPropSame_d2m) ){
+                alert("存在しない項目を設定 or 存在する項目を未設定なようです。。");
+                return;
+            }
+
+            //正規表現を設定している場合、正規表現でエラーが出れば終了
+            if ( _checkSureRegexp(myconfig) === false) {
+                alert("NGキーワードのどこかでおかしい正規表現が含まれているようです。。");
+                return;
+            }
+
+            if( _checkSuretaiRegexp(myconfig) === false){
+                alert("NGスレタイのどこかでおかしい正規表現が含まれているようです。。");
+                return;
+            }
+
+            //正規表現を設定していない場合 -> NG処理の中でエスケープするので問題無し
+
+            //dashboard.js内部の更新
+            bg.preserve.dashboard = myconfig;
+            _setConfig(bg.preserve.dashboard);
+
+            //background.js内部の更新
+            _sendMessageToBackground( {dashboard: bg.preserve.dashboard });
+
+            //テキストエリアの清掃
+            textarea.value = "設定を反映しますた。";
+            setTimeout(function(){
+                textarea.value = "";                
+            },3000);
+
+            return;
+        });
+        return;
+    }
+
+    function _chooseAll(id) {
+        var elm = document.getElementById(id);
+        elm.addEventListener("focus", function() {
+            elm.select();
         });
         return;
     }

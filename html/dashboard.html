@@ -158,8 +158,20 @@
                         <h1 class="page-header">お気に入り</h1>
                         <h3 class="sub-header text-info">板</h3>
                         <div id="favita"></div>
+                        <div id="favita-delete" style="display:none">
+                            <br>
+                            <input type='checkbox' name='favitaall' id='favitaall'>全部選択/解除</input>
+                            <br>
+                            <button type="button" id="favita-deletebtn" class="btn btn-danger">チェックした板を履歴から消す</button>
+                        </div>
                         <h3 class="sub-header text-info">スレ</h3>
                         <div id="favsure"></div>
+                        <div id="favsure-delete" style="display:none">
+                            <br>
+                            <input type='checkbox' name='favsureall' id='favsureall'>全部選択/解除</input>
+                            <br>
+                            <button type="button" id="favsure-deletebtn" class="btn btn-danger">チェックしたスレを履歴から消す</button>
+                        </div>
                     </div>
                     <div>
                         <a name="history"><h1 class="invisible">履歴</h1></a>
@@ -202,31 +214,10 @@
                             </div>
                             <br>
                         </div>
-                        <!--
-                        <h3 class="sub-header text-info">自動アク禁</h3>
-                        <div>
-                            <div>
-                                <label for="autoaku">自動アク禁する？：</label>
-                                <select id="autoaku" name="autoaku">
-                                    <option value="no">しない</option>
-                                    <option value="yes">する</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="autoakuwords">自動アク禁ワード：</label>
-                                <br>
-                                <textarea id="autoakuwords" name="autoakuwords" cols="40" rows="4" placeholder="※実装は未定です" readonly></textarea>
-                            </div>
-                            <div>
-                                <button type="button" id="autoaku-savebtn" class="btn btn-primary">自動アク禁の動作設定を保存</button>
-                            </div>
-                            <br>
-                        </div>
--->
                         <h3 class="sub-header text-info">設定の読み込み/書き出し</h3>
                         <div>
                             <div>
-                                <textarea id="configio" name="configio" cols="40" rows="4" placeholder="※実装は未定です" readonly></textarea>
+                                <textarea id="configio" name="configio" cols="40" rows="4" placeholder="" ></textarea>
                             </div>
                             <div>
                                 <button type="button" id="configio-savebtn" class="btn btn-primary">設定を読み込む</button>
