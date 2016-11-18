@@ -77,7 +77,7 @@
             temp = d[ix].innerText;
             output.push({
                 order: temp.match(/^[0-9].*: /)[0],
-                suretai: temp.match(/^.*: (.*) \([0-9].*\)$/)[1],
+                suretai: temp.match(/^.*: (.*) \([0-9].*\)$/) === null ? "" : temp.match(/^.*: (.*) \([0-9].*\)$/)[1],
                 resamount: temp.match(/ \([0-9].*\)$/)[0],
                 url: d[ix].getAttribute("href")
             });
@@ -118,11 +118,11 @@
     }
 
     function _replaceTopThreads(kaigyou) {
-        var _tail = kaigyou === "yes" ? "<br>" : "　";
+        //var _tail = kaigyou === "yes" ? "<br>" : "　";
         var str;
         var output = _suretaiaboned.map(function(elm) {
             str = "<a href='" + elm.url + "'target='body'><t>" + elm.order + elm.suretai + "</t>" + elm.resamount + "</a>";
-            str += _tail;
+            //str += _tail;
             return str;
         });
         document.querySelector("small#trad").innerHTML = output.join("");
@@ -134,7 +134,7 @@
         var _newdiv = document.createElement("div");
 
         _newdiv.classList.add("Abrowzered");
-        _newdiv.innerHTML = "<a href=/" + _info.bbsname + "/kako/>★過去ログ</a><br><a href=/" + _info.bbsname + "/>★板に戻る</a><br><a href=/" + _info.bbsname + "/gomi.html >★ごみ箱(仮)</a><hr>";
+        _newdiv.innerHTML = "<a href=/" + _info.bbsname + "/kako/>★過去ログ</a><a href=/" + _info.bbsname + "/>★板に戻る</a><a href=/" + _info.bbsname + "/gomi.html >★ごみ箱(仮)</a><hr>";
 
         var _div = document.getElementsByTagName("div")[0];
         var _small = document.getElementById("trad");
