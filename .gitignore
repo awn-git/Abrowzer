@@ -1,4 +1,9 @@
 misc/
 .DS_Store
-*/.DS_Store
-*/*/.DS_Store
+js/.DS_Store
+img/.DS_Store
+html/.DS_Store
+css/.DS_Store
+bootstrap/css/.DS_Store
+bootstrap/fonts/.DS_Store
+bootstrap/js/.DS_Store
