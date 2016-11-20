@@ -9,6 +9,7 @@
 //  A'     VML  MM.   ,M9 MM    YA.   ,A9   VVV    VVV     AMV  ,YM.    ,  MM    
 //.AMA.   .AMMA.P^YbmdP'.JMML.   `Ybmd9'     W      W     AMMmmmM `Mbmmd'.JMML.  
 //////////////////////////////////////////////////////////////////////////////*/
+
 a:link {
     color: #0000FF
 }
@@ -26,5 +27,7 @@ body {
 }
 
 .resbody {
-    margin : 7pt
+    margin-left: 20pt;
+    margin-top: 1pt;
+    margin-bottom: 10pt;
 }
