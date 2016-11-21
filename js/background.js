@@ -24,7 +24,8 @@ window.bg = (function() {
                 sure: [],
                 ita: []
             },
-            dashboard: {}
+            dashboard: {},
+            mode: null
         }
     };
 
@@ -50,6 +51,30 @@ window.bg = (function() {
         type: "normal",
         id: "abrowzer",
         contexts: ["page", "selection"]
+    };
+
+    _conmenu.mode = {
+        title: "閲覧モード",
+        type: "normal",
+        id: "mode",
+        parentId: "abrowzer",
+        documentUrlPatterns: ["http://*.open2ch.net/*"]
+    };
+
+    _conmenu.normalmode = {
+        title: "通常",
+        type: "radio",
+        id: "normalmode",
+        parentId: "mode",
+        documentUrlPatterns: ["http://*.open2ch.net/*"]
+    };
+
+    _conmenu.simplemode = {
+        title: "シンプル",
+        type: "radio",
+        id: "simplemode",
+        parentId: "mode",
+        documentUrlPatterns: ["http://*.open2ch.net/*"]
     };
 
     _conmenu.open2ch = {
@@ -171,6 +196,7 @@ window.bg = (function() {
         _doNGingInSure();
         _openDashboard();
         _assignContextMenuLister();
+        _assignBeforeRq();
         return;
     }
 
@@ -180,6 +206,7 @@ window.bg = (function() {
                 _bgobj = obj;
             } else {
                 _bgobj.preserve.dashboard = _defaultconfigs;
+                _bgobj.preserve.mode = "normalmode";
                 _saveLocalStorage(_bgobj);
             }
             return;
@@ -235,6 +262,11 @@ window.bg = (function() {
             }
         }
 
+        //モードの切り替え
+        if( _bgobj.preserve.mode === "simplemode" ){
+            chrome.contextMenus.update("simplemode",{checked: true});
+        }
+
         return;
     }
 
@@ -265,7 +297,7 @@ window.bg = (function() {
                         _injectSubject(parm, sender);
                         break;
                     case "bbsmenu":
-                        _injectBbsmenu(parm,sender);
+                        _injectBbsmenu(parm, sender);
                         break;
                     case "入口":
                         _injectMenu(parm, sender);
@@ -384,19 +416,19 @@ window.bg = (function() {
         return;
     }
 
-    function _injectSubject(parm,sender) {
-        chrome.tabs.executeScript(sender.tab.id, {file: "js/subject.js"}, function(response) {
+    function _injectSubject(parm, sender) {
+        chrome.tabs.executeScript(sender.tab.id, { file: "js/subject.js" }, function(response) {
             chrome.tabs.insertCSS(sender.tab.id, { file: "css/subject.css" });
-            console.dir( response[0] );
+            console.dir(response[0]);
             return;
         });
         return;
     }
 
-    function _injectBbsmenu(parm,sender) {
-        chrome.tabs.executeScript(sender.tab.id, {file: "js/bbsmenu.js"}, function(response) {
+    function _injectBbsmenu(parm, sender) {
+        chrome.tabs.executeScript(sender.tab.id, { file: "js/bbsmenu.js" }, function(response) {
             chrome.tabs.insertCSS(sender.tab.id, { file: "css/bbsmenu.css" });
-            console.dir( response[0] );
+            console.dir(response[0]);
             return;
         });
         return;
@@ -542,6 +574,12 @@ window.bg = (function() {
         return;
     }
 
+    function _switchCurrentMode(selected) {
+        _bgobj.preserve.mode = selected;
+        _saveLocalStorage(_bgobj);
+        return;
+    }
+
     function _findKeyword(url, keyword) {
         //note: 選択されたテキストは複数行あっても１行とみなされる
         var bbsname = url.match(/^.*open2ch.net\/test\/read.cgi\/(.*)\/[0-9]{10}\//)[1];
@@ -640,32 +678,28 @@ window.bg = (function() {
                 _setNgKeyword(info.menuItemId, info.selectionText);
             }
 
+            if (info.parentMenuItemId === "mode") {
+                _switchCurrentMode(info.menuItemId);
+            }
+
         });
         return;
     }
 
-    /* test of onbeforewebrequest */
-    /*
-    onBeforeRequest - Fired when a request is about to occur.
-    chrome.webRequest.onBeforeRequest.addListener(function callback)
-    */
-    (function() {
-        //beforeRq();
+    function _assignBeforeRq() {
+        chrome.webRequest.onBeforeRequest.addListener(function(parm) {
+            console.log("onBeforeRequest");
+            console.dir(parm);
+            var urltemp = parm.url.match(/(^.*\/)test\/read\.cgi\/(.*)\/([0-9]{10})/);;
+            var url = urltemp[1] + urltemp[2] + "/dat/" + urltemp[3] + ".dat";
 
-        function beforeRq() {
-            chrome.webRequest.onBeforeRequest.addListener(function(parm) {
-                console.log("onBeforeRequest");
-                console.dir(parm);
-                var urltemp = parm.url.match(/(^.*\/)test\/read\.cgi\/(.*)\/([0-9]{10})/);;
-                var url = urltemp[1] + urltemp[2] + "/dat/" + urltemp[3] + ".dat";
-                return {
-                    //redirectUrl : url
-                };
-            }, { urls: ["http://*.open2ch.net/test/read.cgi/*"] }, ["blocking"]);
-        }
+            if (_bgobj.preserve.mode === "simplemode") {
+                return { redirectUrl: url };
+            }
+        }, { urls: ["http://*.open2ch.net/test/read.cgi/*"] }, ["blocking"]);
         return;
-    })();
-    /* test of onbeforewebrequest */
+    }
+
 
     /* 集合演算ユーティリティ */
     Util.Array = (function() {
