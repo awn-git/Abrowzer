@@ -43,15 +43,14 @@
 
     function _assignEventHandler() {
         chrome.runtime.onMessage.addListener(function(parm, sender, sendResponse) {
+
             if (parm.suretaiabone === "yes") {
                 _suretaiaboned = _doSuretaiAbone(parm.ngsuretai, parm.ngsuretairegexp);
             } else {
                 _suretaiaboned = _sures;
             }
-            if (parm.suretaiabone === "yes" || parm.suretaikaigyou === "yes") {
-                _replaceTopThreads(parm.suretaikaigyou);
-                _addLinks();
-            }
+            _addLinks();
+            _replaceTopThreads();
 
         });
         return;
@@ -117,12 +116,10 @@
         return output;
     }
 
-    function _replaceTopThreads(kaigyou) {
-        //var _tail = kaigyou === "yes" ? "<br>" : "　";
+    function _replaceTopThreads() {
         var str;
         var output = _suretaiaboned.map(function(elm) {
             str = "<a href='" + elm.url + "'target='body'><t>" + elm.order + elm.suretai + "</t>" + elm.resamount + "</a>";
-            //str += _tail;
             return str;
         });
         document.querySelector("small#trad").innerHTML = output.join("");
@@ -144,6 +141,6 @@
     }
 
     return {
-        info : _info
+        info: _info
     };
 })();
