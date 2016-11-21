@@ -11,11 +11,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 (function() {
+    var info;
     var d = document;
     var pre = d.getElementsByTagName("pre")[0];
     var arr = pre.innerText.split("\n");
 
-    //preタグ内の最後に存在する改行のみの行を取り除く
+    //note: preタグ内の最後に存在する「改行のみの行」を取り除く
     arr.pop();
 
     var suretai = arr[0].match(/ <>(.*)$/)[1];
@@ -59,7 +60,7 @@
             .replace(/^(.*?)<+?>+?/, "<b style='color:green' class='name'>$&</b> ")
             .replace(/ID:(.*?)<+?>+? /, "<span class='id'>$1</span>")
             .replace(/<\/span>(.*$)/, "<\/span><div class='resbody'>$1</div>")
-            .replace(/<>/g, "")
+            .replace(/<>/g, " ")
             .replace(/https?:\/\/[a-zA-Z0-9-_.:@!~*';\/?&=+$,%#]+/g,
                 "<a href='$&' target='_blank'>$&</a>")
             .replace(/&gt;&gt;([0-9]{1,3})/g, "<a href='#$1'>$&</a>");
@@ -88,6 +89,10 @@
     bodyinner += "<div class='form'>" + phorm + "</div>";
 
     d.body.innerHTML = bodyinner;
+
+    //note: datパース後はスレの一番上に移動
+    //note: スレの一番下に移動はwindow.scrollTo(0,document.body.scrollheight)で良いのだが、
+    //note: 　どうやらdatパース前のscrollheightに移動してしまうようだ。
     window.scrollTo(0, 0);
 
     kokomade();
@@ -109,5 +114,21 @@
         });
     }
 
-    return;
+    function getPageInfo(){
+        var info = {
+            bbsname: null,
+            bbsnameJ: null,
+            url: null,
+            suretai: null
+        }
+
+        info.bbsname = bbsname;
+        info.url = host + "test/read.cgi/" + bbsname + "/" + surekey + "/";
+        info.suretai = suretai;
+
+        return info;
+    }
+
+    info = getPageInfo();
+    return info;
 })();
