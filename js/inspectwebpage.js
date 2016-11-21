@@ -73,6 +73,9 @@
             case url.indexOf("find") > -1:
                 rtn = "検索";
                 break;
+            case url.indexOf("bbsmenu.html") > -1:
+                rtn = "bbsmenu";
+                break;
             case url.indexOf("menu") > -1:
                 rtn = "板一覧";
                 break;
