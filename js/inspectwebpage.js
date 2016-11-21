@@ -82,19 +82,19 @@
             case url.indexOf("dev") > -1:
                 rtn = "新機能";
                 break;
-            case url.indexOf("index.rdf") > 1:
+            case url.indexOf("index.rdf") > -1:
                 rtn = "RSS";
                 break;
-            case url.indexOf("dat") > 1:
+            case url.indexOf("dat") > -1:
                 rtn = "dat";
                 break;
-            case url.indexOf("gomi.html") > 1:
+            case url.indexOf("gomi.html") > -1:
                 rtn = "ごみ箱";
                 break;
-            case url.indexOf("kako") > 1:
+            case url.indexOf("kako") > -1:
                 rtn = "過去ログ";
                 break;
-            case url.indexOf("SETTING.TXT") > 1:
+            case url.indexOf("SETTING.TXT") > -1:
             	rtn = "板設定";
             	break;
             case url === "http://mente.open2ch.net/":

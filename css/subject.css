@@ -9,8 +9,14 @@
 //  A'     VML  MM.   ,M9 MM    YA.   ,A9   VVV    VVV     AMV  ,YM.    ,  MM    
 //.AMA.   .AMMA.P^YbmdP'.JMML.   `Ybmd9'     W      W     AMMmmmM `Mbmmd'.JMML.  
 //////////////////////////////////////////////////////////////////////////////*/
+
+
 body {
     background-color: honeydew;
+}
+
+h3 {
+	color:red;
 }
 
 div.header a {

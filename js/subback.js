@@ -10,20 +10,7 @@
 //.AMA.   .AMMA.P^YbmdP'.JMML.   `Ybmd9'     W      W     AMMmmmM `Mbmmd'.JMML.  
 ////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//@title content_scripts.js
-//@description 一行で説明を書く
-//
-//作った人: Awn(@Awn_tw)
-//
-//改定履歴
-//-20xxxxxx(ver 1.0.0) : 新規作成
-//
-////////////////////////////////////////////////////////////////////////////////
 
-
-/* スレ一覧で動くスクリプト */
 (function() {
     //member
     var _info = {};
@@ -130,8 +117,13 @@
     function _addLinks() {
         var _newdiv = document.createElement("div");
 
-        _newdiv.classList.add("Abrowzered");
-        _newdiv.innerHTML = "<a href=/" + _info.bbsname + "/kako/>★過去ログ</a><a href=/" + _info.bbsname + "/>★板に戻る</a><a href=/" + _info.bbsname + "/gomi.html >★ごみ箱(仮)</a><hr>";
+        _newdiv.classList.add("header");
+        var header = "";
+        header += "<a href='http://menu.open2ch.net/bbsmenu.html'>★BBSMENUに戻る</a><br>";
+        header += "<a href=/" + _info.bbsname + "/>■板に戻る</a><a href='http://open2ch.net/test/history.cgi'>履歴に戻る</a><a href=/" + _info.bbsname + "/kako/>★過去ログ</a><a href=/" + _info.bbsname + "/gomi.html >★ごみ箱(仮)</a>";
+        header += "<h3>" + _info.bbsnameJ + "</h3><hr>";
+
+        _newdiv.innerHTML += header;
 
         var _div = document.getElementsByTagName("div")[0];
         var _small = document.getElementById("trad");

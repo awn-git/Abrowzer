@@ -583,6 +583,15 @@ window.bg = (function() {
     function _findKeyword(url, keyword) {
         //note: 選択されたテキストは複数行あっても１行とみなされる
         var bbsname = url.match(/^.*open2ch.net\/test\/read.cgi\/(.*)\/[0-9]{10}\//)[1];
+
+        //note: "ID:"を含むテキストはIDを検索したいものとみなす
+        if( keyword.indexOf("ID:") > -1 ){
+            keyword = keyword.replace(/(.*)(ID:.*)/,"$2")
+                .replace("(主)","")
+                .replace("×", "")
+                .replace(/ /g, "");
+        }
+        keyword = keyword.trim();
         var findurl = "http://find.open2ch.net/?bbs=" + bbsname + "&t=f&q=" + keyword;
         chrome.tabs.create({ url: findurl }, function() {});
         return;
@@ -590,11 +599,12 @@ window.bg = (function() {
 
     function _setNgKeyword(type, keyword) {
         //note: 選択されたテキストは複数行あっても１行とみなされる
+
         if (type === "ngid") {
             keyword = keyword.replace(/.*ID:/, "")
                 .replace("(主)", "")
                 .replace("×", "")
-                .replace(/ /g, "")
+                .replace(/ /g, "");
         }
         keyword = keyword.trim();
 

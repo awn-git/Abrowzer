@@ -10,6 +10,7 @@
 //.AMA.   .AMMA.P^YbmdP'.JMML.   `Ybmd9'     W      W     AMMmmmM `Mbmmd'.JMML.  
 ////////////////////////////////////////////////////////////////////////////////
 
+
 (function() {
     var d = document;
     d.title = "おーぷん２ちゃんねる掲示板リスト";
