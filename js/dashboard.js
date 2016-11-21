@@ -119,7 +119,11 @@
             }
             output = output.join("");
         } else {
-            output = "<span>履歴、ありません。。</span>";
+            if (name.indexOf("his") > -1) {
+                output = "<span>履歴、ありません。。</span>";
+            } else if (name.indexOf("fav") > -1) {
+                output = "<span>お気に入り、ありません。。</span>";
+            }
         }
         return output;
     }
@@ -367,15 +371,16 @@
             var myconfigJ = textarea.value.trim();
             console.dir(myconfig);
             console.dir(defaultconfigs);
-            
+
             //未入力ならば終了
-            if(textarea.value.trim() === ""){
+            if (textarea.value.trim() === "") {
                 alert("何も入力されていないみたいです。。");
                 return;
             }
-            
+
             //JSON文字列でないなら終了
-            try { var myconfig = JSON.parse(myconfigJ);} catch (e) { 
+            try {
+                var myconfig = JSON.parse(myconfigJ); } catch (e) {
                 alert("入力文字列の形式がおかしいです。。");
                 return;
             }
@@ -383,22 +388,27 @@
             //2つのkey集合が全単写でないなら終了
             var myconkeys = Object.keys(myconfig);
             var defaultkeys = Object.keys(defaultconfigs);
-            var isPropSame_m2d = false, isPropSame_d2m = false;
-            isPropSame_m2d = defaultkeys.every(function(elm) {return myconkeys.find(function(inelm) {return inelm === elm; }) });
-            isPropSame_d2m = myconkeys.every(function(elm){return defaultkeys.find(function(inelm){return inelm === elm;})});
+            var isPropSame_m2d = false,
+                isPropSame_d2m = false;
+            isPropSame_m2d = defaultkeys.every(function(elm) {
+                return myconkeys.find(function(inelm) {
+                    return inelm === elm; }) });
+            isPropSame_d2m = myconkeys.every(function(elm) {
+                return defaultkeys.find(function(inelm) {
+                    return inelm === elm; }) });
 
-            if(!(isPropSame_m2d && isPropSame_d2m) ){
+            if (!(isPropSame_m2d && isPropSame_d2m)) {
                 alert("存在しない項目を設定 or 存在する項目を未設定なようです。。");
                 return;
             }
 
             //正規表現を設定している場合、正規表現でエラーが出れば終了
-            if ( _checkSureRegexp(myconfig) === false) {
+            if (_checkSureRegexp(myconfig) === false) {
                 alert("NGキーワードのどこかでおかしい正規表現が含まれているようです。。");
                 return;
             }
 
-            if( _checkSuretaiRegexp(myconfig) === false){
+            if (_checkSuretaiRegexp(myconfig) === false) {
                 alert("NGスレタイのどこかでおかしい正規表現が含まれているようです。。");
                 return;
             }
@@ -410,13 +420,13 @@
             _setConfig(bg.preserve.dashboard);
 
             //background.js内部の更新
-            _sendMessageToBackground( {dashboard: bg.preserve.dashboard });
+            _sendMessageToBackground({ dashboard: bg.preserve.dashboard });
 
             //テキストエリアの清掃
             textarea.value = "設定を反映しますた。";
-            setTimeout(function(){
-                textarea.value = "";                
-            },3000);
+            setTimeout(function() {
+                textarea.value = "";
+            }, 3000);
 
             return;
         });

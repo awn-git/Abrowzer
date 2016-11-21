@@ -70,7 +70,8 @@ window.bg = (function() {
         title: "お気に入り板へ移動する",
         type: "normal",
         id: "jump",
-        parentId: "abrowzer"
+        parentId: "abrowzer",
+        documentUrlPatterns: ["http://*.open2ch.net/*"]
     };
 
     _conmenu.extracturl = {
@@ -94,15 +95,7 @@ window.bg = (function() {
         type: "normal",
         id: "favita",
         parentId: "abrowzer",
-        documentUrlPatterns: ["http://*.open2ch.net/*/"]
-    };
-
-    _conmenu.favita2 = {
-        title: "この板をお気に入りに登録する",
-        type: "normal",
-        id: "favita2",
-        parentId: "abrowzer",
-        documentUrlPatterns: ["http://*.open2ch.net/test/read.cgi/*"]
+        documentUrlPatterns: ["http://*.open2ch.net/*"]
     };
 
     _conmenu.download = {
@@ -201,7 +194,7 @@ window.bg = (function() {
         return;
     }
 
-    function _updateContextMenu(favarr) {
+    function _updateContextMenu(favarr, pagetype) {
         var temp = {};
         var conkeys = Object.keys(_conmenu);
         var favkeys = [];
@@ -246,12 +239,11 @@ window.bg = (function() {
     }
 
 
-
     function _evaluateMessage() {
         chrome.runtime.onMessage.addListener(function(parm, sender) {
-            _updateContextMenu(_bgobj.preserve.favorite.ita);
+            _updateContextMenu(_bgobj.preserve.favorite.ita, parm.pagetype);
 
-            //from content_scripts
+            //from inspectwebpage
             if (parm.pagetype) {
                 switch (parm.pagetype) {
                     case "スレ":
@@ -266,11 +258,15 @@ window.bg = (function() {
                     case "画像一覧":
                         _injectImagelist(parm, sender);
                         break;
-
                     case "dat":
                         _injectDat(parm, sender);
                         break;
-
+                    case "subject":
+                        _injectSubject(parm, sender);
+                        break;
+                    case "bbsmenu":
+                        _injectBbsmenu(parm,sender);
+                        break;
                     case "入口":
                         _injectMenu(parm, sender);
                         break;
@@ -359,9 +355,7 @@ window.bg = (function() {
 
     function _injectSubback(parm, sender) {
         chrome.tabs.executeScript(sender.tab.id, { file: "js/subback.js" }, function(response) {
-            console.log("injected");
             chrome.tabs.insertCSS(sender.tab.id, { file: "css/subback.css" });
-            console.log("css is injected");
             chrome.tabs.sendMessage(sender.tab.id, _bgobj.preserve.dashboard, function() {});
             return;
         });
@@ -381,6 +375,29 @@ window.bg = (function() {
     function _injectDat(parm, sender) {
         chrome.tabs.executeScript(sender.tab.id, { file: "js/dat.js" }, function(response) {
             chrome.tabs.insertCSS(sender.tab.id, { file: "css/dat.css" });
+            _bgobj.temporary = response[0];
+            _bgobj.temporary.bbsnameJ = _bgobj.preserve.history.ita.filter(function(elm) {
+                return elm.bbsname === _bgobj.temporary.bbsname;
+            })[0].bbsnameJ;
+            _storeHistory("sure", _bgobj.temporary);
+        });
+        return;
+    }
+
+    function _injectSubject(parm,sender) {
+        chrome.tabs.executeScript(sender.tab.id, {file: "js/subject.js"}, function(response) {
+            chrome.tabs.insertCSS(sender.tab.id, { file: "css/subject.css" });
+            console.dir( response[0] );
+            return;
+        });
+        return;
+    }
+
+    function _injectBbsmenu(parm,sender) {
+        chrome.tabs.executeScript(sender.tab.id, {file: "js/bbsmenu.js"}, function(response) {
+            chrome.tabs.insertCSS(sender.tab.id, { file: "css/bbsmenu.css" });
+            console.dir( response[0] );
+            return;
         });
         return;
     }
@@ -391,10 +408,8 @@ window.bg = (function() {
 
     function _storeHistory(pagetype, temp) {
         if (temp) {
-            //pagetype = ita || sure
             var dupcheck = [];
             var isDup = true;
-            //pagetypeに格納されているurlを取得する
             dupcheck = _bgobj.preserve.history[pagetype].map(function(elm) {
                 return elm.url;
             });
@@ -421,15 +436,15 @@ window.bg = (function() {
         console.log("_addFavSure");
         var dupcheck = [];
         var isDup = true;
-        var urltemp = _url.match(/^.*read\.cgi\/(.*)\/[0-9]{10}\//);
+        var urltemp = _url.match(/(^.*read\.cgi)\/(.*)\/([0-9]{10})\//);
 
         var temp = {
             bbsname: urltemp[1],
             bbsnameJ: _bgobj.preserve.history.sure.filter(function(elm) {
-                return elm.bbsname === urltemp[1];
+                return elm.bbsname === urltemp[2];
             })[0].bbsnameJ,
             suretai: _title,
-            url: (urltemp[0] + "l50")
+            url: (urltemp[1] + "/" + urltemp[2] + "/" + urltemp[3] + "/")
         };
 
         dupcheck = _bgobj.preserve.favorite.sure.map(function(elm) {
@@ -445,7 +460,7 @@ window.bg = (function() {
         return;
     }
 
-    function _addFavIta(_title, _url, _pagetype) {
+    function _addFavIta(_title, _url) {
         console.log("_addFavIta");
         var dupcheck = [];
         var isDup = true;
@@ -454,22 +469,39 @@ window.bg = (function() {
             bbsnameJ: "",
             url: ""
         };
+        var _pagetype = "";
+        var urltemp = "";
 
-        if (_pagetype === "favita") { //板TOPからの呼び出し
-            var urltemp = _url.match(/.*open2ch\.net\/(.*)\//);
-            temp.url = urltemp[0];
-            temp.bbsname = urltemp[1];
-            temp.bbsnameJ = _bgobj.preserve.history.ita.filter(function(elm) {
-                return elm.bbsname === urltemp[1];
-            })[0].bbsnameJ;
-        } else { //スレの中から呼び出し
-            var urltemp = _url.match(/(^.*open2ch\.net\/).*read.cgi\/(.*)\/[0-9]{10}\//);
-            temp.url = urltemp[1] + urltemp[2] + "/";
-            temp.bbsname = urltemp[2];
-            temp.bbsnameJ = _bgobj.preserve.history.sure.filter(function(elm) {
-                return elm.bbsname === urltemp[2];
-            })[0].bbsnameJ;
+        if (_url.match(/(^.*open2ch\.net\/).*read.cgi\/(.*)\/[0-9]{10}\//)) {
+            urltemp = _url.match(/(^.*open2ch\.net\/).*read.cgi\/(.*)\/[0-9]{10}\//);
+            _pagetype = "sure";
+        } else {
+            urltemp = _url.match(/.*open2ch\.net\/(.*)\//);
+            _pagetype = "ita";
         }
+
+        try {
+            if (_pagetype === "ita") {
+                temp.url = urltemp[0];
+                temp.bbsname = urltemp[1];
+                temp.bbsnameJ = _bgobj.preserve.history.ita.filter(function(elm) {
+                    return elm.bbsname === urltemp[1];
+                })[0].bbsnameJ;
+            } else if (_pagetype === "sure") {
+                temp.url = urltemp[1] + urltemp[2] + "/";
+                temp.bbsname = urltemp[2];
+                temp.bbsnameJ = _bgobj.preserve.history.sure.filter(function(elm) {
+                    return elm.bbsname === urltemp[2];
+                })[0].bbsnameJ;
+            } else {
+                return;
+            }
+        } catch (e) {
+            alert("うーん、板情報が取得できませんでした。。。");
+            return;
+        }
+
+        console.dir(temp);
 
         dupcheck = _bgobj.preserve.favorite.ita.map(function(elm) {
             return elm.url;
@@ -481,6 +513,7 @@ window.bg = (function() {
             _bgobj.preserve.favorite.ita.unshift(temp);
             _saveLocalStorage(_bgobj);
         }
+
         return;
     }
 
@@ -504,55 +537,55 @@ window.bg = (function() {
         return;
     }
 
-    function _openOpen2ch(){
-        chrome.tabs.create({url : "http://open2ch.net/"},function(){});
+    function _openOpen2ch() {
+        chrome.tabs.create({ url: "http://open2ch.net/" }, function() {});
         return;
     }
 
-    function _findKeyword(url,keyword){
+    function _findKeyword(url, keyword) {
         //note: 選択されたテキストは複数行あっても１行とみなされる
         var bbsname = url.match(/^.*open2ch.net\/test\/read.cgi\/(.*)\/[0-9]{10}\//)[1];
         var findurl = "http://find.open2ch.net/?bbs=" + bbsname + "&t=f&q=" + keyword;
-        chrome.tabs.create({ url: findurl},function(){});
+        chrome.tabs.create({ url: findurl }, function() {});
         return;
     }
 
-    function _setNgKeyword(type,keyword){
+    function _setNgKeyword(type, keyword) {
         //note: 選択されたテキストは複数行あっても１行とみなされる
-        if(type === "ngid"){
-            keyword = keyword.replace(/.*ID:/,"")
-            .replace("(主)","")
-            .replace("×","")
-            .replace(/ /g,"")
+        if (type === "ngid") {
+            keyword = keyword.replace(/.*ID:/, "")
+                .replace("(主)", "")
+                .replace("×", "")
+                .replace(/ /g, "")
         }
         keyword = keyword.trim();
 
         //note: 正規表現を使用していない場合、そのまま追加
         //note: 正規表現を使用している場合、エスケープする
-        if(_bgobj.preserve.dashboard.ngkeywordregexp === "yes"){
+        if (_bgobj.preserve.dashboard.ngkeywordregexp === "yes") {
             keyword = keyword.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
         }
 
-        if( type === "ngword"){
-            if( _bgobj.preserve.dashboard.ngwords !== ""){
+        if (type === "ngword") {
+            if (_bgobj.preserve.dashboard.ngwords !== "") {
                 _bgobj.preserve.dashboard.ngwords += "\n" + keyword;
-            }else{
+            } else {
                 _bgobj.preserve.dashboard.ngwords = keyword;
             }
         }
 
-        if( type === "ngname"){
-            if( _bgobj.preserve.dashboard.ngnames !== ""){
+        if (type === "ngname") {
+            if (_bgobj.preserve.dashboard.ngnames !== "") {
                 _bgobj.preserve.dashboard.ngnames += "\n" + keyword;
-            }else{
+            } else {
                 _bgobj.preserve.dashboard.ngnames = keyword;
             }
         }
 
-        if( type === "ngid"){
-            if( _bgobj.preserve.dashboard.ngids !== ""){
+        if (type === "ngid") {
+            if (_bgobj.preserve.dashboard.ngids !== "") {
                 _bgobj.preserve.dashboard.ngids += "\n" + keyword;
-            }else{
+            } else {
                 _bgobj.preserve.dashboard.ngids = keyword;
             }
         }
@@ -583,8 +616,8 @@ window.bg = (function() {
                 _addFavSure(tab.title, tab.url);
             }
 
-            if (info.menuItemId === "favita" || info.menuItemId === "favita2") {
-                _addFavIta(tab.title, tab.url, info.menuItemId);
+            if (info.menuItemId === "favita") {
+                _addFavIta(tab.title, tab.url);
             }
 
             if (info.parentMenuItemId === "jump") {
@@ -600,12 +633,12 @@ window.bg = (function() {
             };
 
             if (info.menuItemId === "find") {
-                _findKeyword(tab.url,info.selectionText);
+                _findKeyword(tab.url, info.selectionText);
             }
 
-            if (info.menuItemId === "ngword" || info.menuItemId === "ngname" || info.menuItemId === "ngid"){
-                _setNgKeyword(info.menuItemId,info.selectionText);
-            }            
+            if (info.menuItemId === "ngword" || info.menuItemId === "ngname" || info.menuItemId === "ngid") {
+                _setNgKeyword(info.menuItemId, info.selectionText);
+            }
 
         });
         return;
