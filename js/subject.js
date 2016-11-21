@@ -31,7 +31,7 @@
 
 
     var arrmap = arr.map(function(elm, ind) {
-        return elm = elm.replace(/([0-9]{10}\.dat)(.*) (\([0-9]{1,3}\))/,
+        return elm = elm.replace(/([0-9]{10}\.dat)(.*) (\([0-9]{1,4}\))/,
                 "<a href=/" + info.bbsname + "/dat/$1 >" + (ind + 1) + " : <span class='suretai'>$2</span> $3</a>")
             .replace("<>", "");
     });
