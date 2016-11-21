@@ -1,0 +1,28 @@
+/*//////////////////////////////////////////////////////////////////////////////
+//                                                                               
+//              ,,                                                               
+//      db     *MM                                                               
+//     ;MM:     MM                                                               
+//    ,V^MM.    MM,dMMb.`7Mb,od8 ,pW"Wq.`7M'    ,A    `MF'M"""MMV .gP"Ya `7Mb,od8
+//   ,M  `MM    MM    `Mb MM' "'6W'   `Wb VA   ,VAA   ,V  '  AMV ,M'   Yb  MM' "'
+//   AbmmmqMA   MM     M8 MM    8M     M8  VA ,V  VA ,V     AMV  8M""""""  MM    
+//  A'     VML  MM.   ,M9 MM    YA.   ,A9   VVV    VVV     AMV  ,YM.    ,  MM    
+//.AMA.   .AMMA.P^YbmdP'.JMML.   `Ybmd9'     W      W     AMMmmmM `Mbmmd'.JMML.  
+//////////////////////////////////////////////////////////////////////////////*/
+
+body {
+    background-color: #CCFFCC;
+}
+
+a {
+    display: inline;
+    margin: 5px;
+}
+
+a:hover {
+    background-color: cyan;
+}
+
+a:active {
+    background-color: gold;
+}
