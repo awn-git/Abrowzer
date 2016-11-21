@@ -509,6 +509,59 @@ window.bg = (function() {
         return;
     }
 
+    function _findKeyword(url,keyword){
+        //note: 選択されたテキストは複数行あっても１行とみなされる
+        var bbsname = url.match(/^.*open2ch.net\/test\/read.cgi\/(.*)\/[0-9]{10}\//)[1];
+        var findurl = "http://find.open2ch.net/?bbs=" + bbsname + "&t=f&q=" + keyword;
+        chrome.tabs.create({ url: findurl},function(){});
+        return;
+    }
+
+    function _setNgKeyword(type,keyword){
+        //note: 選択されたテキストは複数行あっても１行とみなされる
+        if(type === "ngid"){
+            keyword = keyword.replace(/.*ID:/,"")
+            .replace("(主)","")
+            .replace("×","")
+            .replace(/ /g,"")
+        }
+        keyword = keyword.trim();
+
+        //note: 正規表現を使用していない場合、そのまま追加
+        //note: 正規表現を使用している場合、エスケープする
+        if(_bgobj.preserve.dashboard.ngkeywordregexp === "yes"){
+            keyword = keyword.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
+        }
+
+        if( type === "ngword"){
+            if( _bgobj.preserve.dashboard.ngwords !== ""){
+                _bgobj.preserve.dashboard.ngwords += "\n" + keyword;
+            }else{
+                _bgobj.preserve.dashboard.ngwords = keyword;
+            }
+        }
+
+        if( type === "ngname"){
+            if( _bgobj.preserve.dashboard.ngnames !== ""){
+                _bgobj.preserve.dashboard.ngnames += "\n" + keyword;
+            }else{
+                _bgobj.preserve.dashboard.ngnames = keyword;
+            }
+        }
+
+        if( type === "ngid"){
+            if( _bgobj.preserve.dashboard.ngids !== ""){
+                _bgobj.preserve.dashboard.ngids += "\n" + keyword;
+            }else{
+                _bgobj.preserve.dashboard.ngids = keyword;
+            }
+        }
+
+        _saveLocalStorage(_bgobj);
+
+        return;
+    }
+
     function _createContextMenu(obj) {
         for (var key in obj) {
             chrome.contextMenus.create(obj[key]);
@@ -545,6 +598,14 @@ window.bg = (function() {
             if (info.menuItemId === "open2ch") {
                 _openOpen2ch();
             };
+
+            if (info.menuItemId === "find") {
+                _findKeyword(tab.url,info.selectionText);
+            }
+
+            if (info.menuItemId === "ngword" || info.menuItemId === "ngname" || info.menuItemId === "ngid"){
+                _setNgKeyword(info.menuItemId,info.selectionText);
+            }            
 
         });
         return;
