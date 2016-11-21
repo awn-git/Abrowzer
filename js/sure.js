@@ -404,8 +404,8 @@
             function _doToumeiAbone(num) {
                 var ab_hidden = "display:none";
                 Op2SureObj.dt[num].classList.add("Abrowzered");
-                Op2SureObj.dt[num].setAttribute("style", ab_none);
-                Op2SureObj.dd[num].setAttribute("style", ab_none);
+                Op2SureObj.dt[num].setAttribute("style", ab_hidden);
+                Op2SureObj.dd[num].setAttribute("style", ab_hidden);
                 return;
             }
 
