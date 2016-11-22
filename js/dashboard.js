@@ -100,7 +100,7 @@
     }
 
 
-    function _generateHistoryTexts(data, name) {
+    function _displayPreservedData(data, name) {
         var data;
         var output;
         if (data.length) {
@@ -129,8 +129,8 @@
 
 
     function _setHistory(his) {
-        var itahtml = _generateHistoryTexts(his.ita, "hisita");
-        var surehtml = _generateHistoryTexts(his.sure, "hissure");
+        var itahtml = _displayPreservedData(his.ita, "hisita");
+        var surehtml = _displayPreservedData(his.sure, "hissure");
         var d = document;
 
         d.getElementById("hisita").innerHTML = itahtml;
@@ -146,8 +146,8 @@
     }
 
     function _setFavorite(fav) {
-        var itahtml = _generateHistoryTexts(fav.ita, "favita");
-        var surehtml = _generateHistoryTexts(fav.sure, "favsure");
+        var itahtml = _displayPreservedData(fav.ita, "favita");
+        var surehtml = _displayPreservedData(fav.sure, "favsure");
         var d = document;
 
         d.getElementById("favita").innerHTML = itahtml;
