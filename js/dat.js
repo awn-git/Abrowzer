@@ -17,15 +17,9 @@
     var pre = d.getElementsByTagName("pre")[0];
     var arr = pre.innerText.split("\n");
 
-//note: 今のところ１レス目のタイトルを取得する箇所でパース失敗している。
-//    : ので、そこだけなんとかすればおk
-//    : だと思う。
-
-
     //note: preタグ内の最後に存在する「改行のみの行」を取り除く
     arr.pop();
 
-//    var suretai = arr[0].match(/ <>(.*)$/)[1];
     var li = arr[0].lastIndexOf("<>");
     var suretai = arr[0].substr(li+2);
     d.title = suretai;
