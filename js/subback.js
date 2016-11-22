@@ -119,8 +119,8 @@
 
         _newdiv.classList.add("header");
         var header = "";
-        header += "<a href='http://menu.open2ch.net/bbsmenu.html'>★BBSMENUに戻る</a><br>";
-        header += "<a href=/" + _info.bbsname + "/>■板に戻る</a><a href='http://open2ch.net/test/history.cgi'>履歴に戻る</a><a href=/" + _info.bbsname + "/kako/>★過去ログ</a><a href=/" + _info.bbsname + "/gomi.html >★ごみ箱(仮)</a>";
+        header += "<a href='http://menu.open2ch.net/bbsmenu.html'>★BBSMENU</a><br>";
+        header += "<a href=/" + _info.bbsname + "/>■板に戻る</a><a href='http://open2ch.net/test/history.cgi'>履歴</a><a href=/" + _info.bbsname + "/subject.txt>★スレッド一覧(大量)</a><a href=/" + _info.bbsname + "/kako/>★過去ログ</a><a href=/" + _info.bbsname + "/gomi.html >★ごみ箱(仮)</a>";
         header += "<h3>" + _info.bbsnameJ + "</h3><hr>";
 
         _newdiv.innerHTML += header;

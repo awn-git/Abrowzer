@@ -77,10 +77,10 @@ window.bg = (function() {
         documentUrlPatterns: ["http://*.open2ch.net/*"]
     };
 
-    _conmenu.open2ch = {
-        title: "おーぷん２ちゃんねるを開く",
+    _conmenu.bbsmenu = {
+        title: "BBSMENUを開く",
         type: "normal",
-        id: "open2ch",
+        id: "bbsmenu",
         parentId: "abrowzer"
     };
 
@@ -569,8 +569,8 @@ window.bg = (function() {
         return;
     }
 
-    function _openOpen2ch() {
-        chrome.tabs.create({ url: "http://open2ch.net/" }, function() {});
+    function _openBbsmenu() {
+        chrome.tabs.create({ url: "http://menu.open2ch.net/bbsmenu.html" }, function() {});
         return;
     }
 
@@ -676,8 +676,8 @@ window.bg = (function() {
                 _jumpToDashboard();
             };
 
-            if (info.menuItemId === "open2ch") {
-                _openOpen2ch();
+            if (info.menuItemId === "bbsmenu") {
+                _openBbsmenu();
             };
 
             if (info.menuItemId === "find") {

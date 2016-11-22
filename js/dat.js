@@ -29,29 +29,35 @@
     var bbsname = lh[2];
     var surekey = lh[3];
     var gazou = host + "test/image.cgi/" + bbsname + "/" + surekey + "/";
+    var matomeru = "https://2mtmex.com/?url=" + host + "test/read.cgi/" + bbsname + "/" + surekey + "/";
     var itatop = host + bbsname;
     var subback = itatop + "/" + "subback.html";
+    var subject = itatop + "/" + "subject.txt";
 
     var header = "";
-    header += "<a href='http://menu.open2ch.net/bbsmenu.html'>★BBSMENUに戻る</a><br>";
-    header += "<a href='" + itatop + "/'>■板に戻る</a> | ";
-    header += "<a href='http://open2ch.net/test/history.cgi'>履歴に戻る</a> | ";
-    header += "<a href='" + subback + "'>★スレ一覧</a> | ";
-    header += "<a href='" + gazou + "'>★画像一覧</a> | ";
-    header += "<a href='#bottom'>↓</a><a name='top'></a>";
+    header += "<a href='http://menu.open2ch.net/bbsmenu.html'>★BBSMENU</a><br>";
+    header += "<a href='" + itatop + "/'>■板に戻る</a>";
+    header += "<a href='http://open2ch.net/test/history.cgi'>履歴</a>";
+    header += "<a href='" + subback + "'>★スレッド一覧</a>";
+    header += "<a href='" + subject + "'>★スレッド一覧(大量)</a>";
+    header += "<a href='#bottom'>↓</a><a name='top'></a><br>";
+    header += "<a href='" + matomeru + "'>まとめる</a>";
+    header += "<a href='" + gazou + "'>★画像一覧</a>";
     header += "<h3 style='color:red;'>" + suretai + "</h3>";
     header += "<hr>";
 
     var footer = "";
     footer += "<hr>";
-    footer += "<div style='text-align:center'><a href='" + location.href + "' id='newres'>新着レスの表示</a> | <a href='#bottom' id='kokomade'>ここまで読んだ？</a></div>";
+    footer += "<div style='text-align:center'><a href='" + location.href + "' id='newres'>新着レスの表示</a><a>|</a><a href='#bottom' id='kokomade'>ここまで読んだ？</a></div>";
     footer += "<hr>";
-    footer += "<a href='http://menu.open2ch.net/bbsmenu.html'>★BBSMENUに戻る</a><br>";
-    footer += "<a href='" + itatop + "/'>■板に戻る</a> | ";
-    footer += "<a href='http://open2ch.net/test/history.cgi'>履歴に戻る</a> | ";
-    footer += "<a href='" + subback + "'>★スレ一覧</a> | ";
-    footer += "<a href='" + gazou + "'>★画像一覧</a> | ";
-    footer += "<a href='#top'>↑</a><a name='bottom'></a>";
+    footer += "<a href='http://menu.open2ch.net/bbsmenu.html'>★BBSMENU</a><br>";
+    footer += "<a href='" + itatop + "/'>■板に戻る</a>";
+    footer += "<a href='http://open2ch.net/test/history.cgi'>履歴</a>";
+    footer += "<a href='" + subback + "'>★スレッド一覧</a>";
+    footer += "<a href='" + subject + "'>★スレッド一覧(大量)</a>";
+    footer += "<a href='#top'>↑</a><a name='bottom'></a><br>";
+    footer += "<a href='" + matomeru + "'>まとめる</a>";
+    footer += "<a href='" + gazou + "'>★画像一覧</a>";
 
     var str;
     var resnum;
