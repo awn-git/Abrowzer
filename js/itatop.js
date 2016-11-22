@@ -50,24 +50,21 @@
         chrome.runtime.onMessage.addListener(function(parm, sender, sendResponse) {
 
             if (parm.suretaiabone === "yes") {
-                _suretaiaboned = _doSuretaiAbone(parm.ngsuretai,parm.ngsuretairegexp);
+                _suretaiaboned = _doSuretaiAbone(parm.ngsuretai, parm.ngsuretairegexp);
             } else {
                 _suretaiaboned = _sures;
             }
-            if (parm.suretaiabone === "yes" || parm.suretaikaigyou === "yes") {
-                _replaceTopThreads(parm.suretaikaigyou);
-            }
+
+            _replaceTopThreads();
         });
         return;
     }
 
 
-    function _replaceTopThreads(kaigyou) {
-        var _tail = kaigyou === "yes" ? "<br>" : "　";
+    function _replaceTopThreads() {
         var str;
         var output = _suretaiaboned.map(function(elm) {
             str = "<a href='" + elm.url + "'target='body'><t>" + elm.order + elm.suretai + "</t>" + elm.resamount + "</a>";
-            str += _tail;
             return str;
         });
         _topThreads.innerHTML = output.join("");

@@ -38,7 +38,6 @@ window.bg = (function() {
         ngmails: "",
         ngids: "",
         suretaiabone: "no",
-        suretaikaigyou: "no",
         ngsuretai: "",
         modoru: "no",
         ngkeywordregexp: "no",
@@ -57,24 +56,21 @@ window.bg = (function() {
         title: "閲覧モード",
         type: "normal",
         id: "mode",
-        parentId: "abrowzer",
-        documentUrlPatterns: ["http://*.open2ch.net/*"]
+        parentId: "abrowzer"
     };
 
     _conmenu.normalmode = {
         title: "通常",
         type: "radio",
         id: "normalmode",
-        parentId: "mode",
-        documentUrlPatterns: ["http://*.open2ch.net/*"]
+        parentId: "mode"
     };
 
     _conmenu.simplemode = {
         title: "シンプル",
         type: "radio",
         id: "simplemode",
-        parentId: "mode",
-        documentUrlPatterns: ["http://*.open2ch.net/*"]
+        parentId: "mode"
     };
 
     _conmenu.bbsmenu = {
@@ -267,6 +263,13 @@ window.bg = (function() {
             chrome.contextMenus.update("simplemode",{checked: true});
         }
 
+        //note: お気に入り板の登録ができるのは、板トップ|スレッド一覧|スレのみ(∵板の日本語名が取得できないため)
+        if( pagetype === "板トップ" || pagetype === "スレ一覧" || pagetype === "スレ" ){
+            chrome.contextMenus.update("favita", {enabled : true});
+        }else{
+            chrome.contextMenus.update("favita", {enabled : false});
+        }
+
         return;
     }
 
@@ -396,6 +399,7 @@ window.bg = (function() {
 
     function _injectItatop(parm, sender) {
         chrome.tabs.executeScript(sender.tab.id, { file: "js/itatop.js" }, function(response) {
+            chrome.tabs.insertCSS(sender.tab.id, { file: "css/itatop.css" });
             _bgobj.temporary = response[0];
             _storeHistory("ita", _bgobj.temporary);
             chrome.tabs.sendMessage(sender.tab.id, _bgobj.preserve.dashboard, function() {});

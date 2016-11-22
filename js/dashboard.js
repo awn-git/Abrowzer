@@ -29,7 +29,6 @@
     };
     var suretaisavebtn = {
         "suretaiabone": null,
-        "suretaikaigyou": null,
         "ngsuretai": null,
         "ngsuretairegexp": null
     }
