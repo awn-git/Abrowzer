@@ -17,19 +17,27 @@
     var pre = d.getElementsByTagName("pre")[0];
     var arr = pre.innerText.split("\n");
 
+//note: 今のところ１レス目のタイトルを取得する箇所でパース失敗している。
+//    : ので、そこだけなんとかすればおk
+//    : だと思う。
+
+
     //note: preタグ内の最後に存在する「改行のみの行」を取り除く
     arr.pop();
 
-    var suretai = arr[0].match(/ <>(.*)$/)[1];
+//    var suretai = arr[0].match(/ <>(.*)$/)[1];
+    var li = arr[0].lastIndexOf("<>");
+    var suretai = arr[0].substr(li+2);
     d.title = suretai;
-    arr[0] = arr[0].replace(/ <>(.*)$/, "");
+    arr[0] = arr[0].substr(0,li);
 
     var lh = location.href.match(/(^.*open2ch.net\/)(.*)\/dat\/([0-9]{10})/);
     var host = lh[1];
     var bbsname = lh[2];
     var surekey = lh[3];
+    var surehtml = host + "test/read.cgi/" + bbsname + "/" + surekey + "/";
     var gazou = host + "test/image.cgi/" + bbsname + "/" + surekey + "/";
-    var matomeru = "https://2mtmex.com/?url=" + host + "test/read.cgi/" + bbsname + "/" + surekey + "/";
+    var matomeru = "https://2mtmex.com/?url=" + surehtml;
     var itatop = host + bbsname;
     var subback = itatop + "/" + "subback.html";
     var subject = itatop + "/" + "subject.txt";
@@ -40,11 +48,12 @@
     header += "<a href='http://open2ch.net/test/history.cgi'>履歴</a>";
     header += "<a href='" + subback + "'>★スレッド一覧</a>";
     header += "<a href='" + subject + "'>★スレッド一覧(大量)</a>";
+    header += "<a href='" + surehtml + "'>read.cgi</a>";
     header += "<a href='#bottom'>↓</a><a name='top'></a><br>";
     header += "<a href='" + matomeru + "'>まとめる</a>";
     header += "<a href='" + gazou + "'>★画像一覧</a>";
-    header += "<h3 style='color:red;'>" + suretai + "</h3>";
     header += "<hr>";
+    header += "<h3 style='color:red;'>" + suretai + "</h3>";
 
     var footer = "";
     footer += "<hr>";
@@ -55,11 +64,11 @@
     footer += "<a href='http://open2ch.net/test/history.cgi'>履歴</a>";
     footer += "<a href='" + subback + "'>★スレッド一覧</a>";
     footer += "<a href='" + subject + "'>★スレッド一覧(大量)</a>";
+    footer += "<a href='" + surehtml + "'>read.cgi</a>";
     footer += "<a href='#top'>↑</a><a name='bottom'></a><br>";
     footer += "<a href='" + matomeru + "'>まとめる</a>";
     footer += "<a href='" + gazou + "'>★画像一覧</a>";
 
-    var str;
     var resnum;
     var arrmap = arr.map(function(elm, ind) {
         elm = elm.replace(/<\/b>/g, "")
@@ -116,7 +125,7 @@
     function newres() {
         var elm = d.getElementById("newres");
         elm.addEventListener("click", function() {
-            location.reload();
+            location.reload(true);
             return;
         });
     }
