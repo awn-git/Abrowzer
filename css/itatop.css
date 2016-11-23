@@ -19,10 +19,10 @@ td#topThreads > font > a {
 
 }
 
-a:hover {
+td#topThreads > font > a:hover {
     background-color: cyan;
 }
 
-a:active {
+td#topThreads > font > a:active {
     background-color: gold;
 }
