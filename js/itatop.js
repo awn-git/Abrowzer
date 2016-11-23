@@ -26,7 +26,7 @@
     //method
     function _init() {
         _info = _getPageInfo();
-        _topThreads = document.getElementById("topThreads").childNodes[1];
+        _topThreads = document.getElementById("topThreads").children[0];
         _sures = _trimThreads();
         _assignEventHandler();
         return;
