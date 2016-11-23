@@ -41,8 +41,8 @@
     header += "<a href='" + itatop + "/'>■板に戻る</a>";
     header += "<a href='http://open2ch.net/test/history.cgi'>履歴</a>";
     header += "<a href='" + subback + "'>★スレッド一覧</a>";
-    header += "<a href='" + subject + "'>★スレッド一覧(大量)</a>";
-    header += "<a href='" + surehtml + "'>read.cgi</a>";
+    header += "<a href='" + subject + "'>★スレッド一覧(大漁)</a>";
+    header += "<a href='" + surehtml + "l50'>read.cgi</a>";
     header += "<a href='#bottom'>↓</a><a name='top'></a><br>";
     header += "<a href='" + matomeru + "'>まとめる</a>";
     header += "<a href='" + gazou + "'>★画像一覧</a>";
@@ -57,19 +57,20 @@
     footer += "<a href='" + itatop + "/'>■板に戻る</a>";
     footer += "<a href='http://open2ch.net/test/history.cgi'>履歴</a>";
     footer += "<a href='" + subback + "'>★スレッド一覧</a>";
-    footer += "<a href='" + subject + "'>★スレッド一覧(大量)</a>";
-    footer += "<a href='" + surehtml + "'>read.cgi</a>";
+    footer += "<a href='" + subject + "'>★スレッド一覧(大漁)</a>";
+    footer += "<a href='" + surehtml + "l50'>read.cgi</a>";
     footer += "<a href='#top'>↑</a><a name='bottom'></a><br>";
     footer += "<a href='" + matomeru + "'>まとめる</a>";
     footer += "<a href='" + gazou + "'>★画像一覧</a>";
 
     var resnum;
     var arrmap = arr.map(function(elm, ind) {
-        elm = elm.replace(/<\/b>/g, "")
-            .replace(/<b>/g, "")
-            .replace(/^(.*?)<+?>+?/, "<b style='color:green' class='name'>$&</b> ")
+        elm = elm.replace(/<\/?b>/g, "")
+            .replace(/^(.*?)<+?>+?/, "<b class='name'>$&</b>")
             .replace(/ID:(.*?)<+?>+? /, "<span class='id'>$1</span>")
-            .replace(/<\/span>(.*$)/, "<\/span><div class='resbody'>$1</div>")
+            .replace(/<\/span>(.*$)/, "<\/span></div><div class='resbody'>$1</div>")
+            .replace(/<><\/b>(.*?)<>/,"<\/b> <span class='mail'>$1</span> ")
+            .replace(/ <>/, "")
             .replace(/<>/g, " ")
             .replace(/https?:\/\/[a-zA-Z0-9-_.:@!~*';\/?&=+$,%#]+/g,
                 "<a href='$&' target='_blank'>$&</a>")
@@ -78,7 +79,7 @@
         resnum = "<a name='" + (ind + 1) + "'>" + (ind + 1) + "</a>" + " :";
         elm = resnum + " " + elm;
 
-        str = "<div class='res'>" + elm + "</div>";
+        str = "<div class='res'><div class='reshead'>" + elm + "</div>";
         return str;
     });
 

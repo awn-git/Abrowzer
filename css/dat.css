@@ -12,15 +12,27 @@
 
 
 a:link {
-    color: #0000FF
+    color: #0000FF;
 }
 
 a:active {
-    color: #FF0000
+    color: #FF0000;
 }
 
 a:visited {
-    color: #660099
+    color: #660099;
+}
+
+.name {
+     color: green;
+}
+
+.mail {
+    color: orange;
+}
+
+.id {
+    color: gray;
 }
 
 div.header a {
