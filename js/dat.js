@@ -74,7 +74,7 @@
             .replace(/<>/g, " ")
             .replace(/https?:\/\/[a-zA-Z0-9-_.:@!~*';\/?&=+$,%#]+/g,
                 "<a href='$&' target='_blank'>$&</a>")
-            .replace(/&gt;&gt;([0-9]{1,3})/g, "<a href='#$1'>$&</a>")
+            .replace(/&gt;&gt;([0-9]{1,4})/g, "<a href='#$1'>$&</a>")
             .replace("<b class='name'>あぼーん</b> <span class='mail'>あぼーん</span> あぼーん あぼーん あぼーん",
                 "<span class='name broken'>あぼーん</b> <span class='mail broken'>あぼーん</span> あぼーん <span class='id broken'>あぼーん</span></div><div class='resbody broken'>あぼーん</div>");
 
