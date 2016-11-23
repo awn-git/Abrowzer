@@ -253,7 +253,7 @@ window.bg = (function() {
             chrome.contextMenus.update("simplemode", { checked: true });
         }
 
-        //note: お気に入り板の登録ができるのは、板トップ|スレッド一覧|スレのみ(∵板の日本語名が取得できないため)
+        //note: 板登録
         if (pagetype === "板トップ" || pagetype === "スレッド一覧" || pagetype === "スレ" || pagetype === "dat" || pagetype === "subject") {
             chrome.contextMenus.update("favita", { enabled: true });
         } else {
@@ -479,6 +479,80 @@ window.bg = (function() {
         return;
     }
 
+function _addFav(_title, _url, _type) {
+    var urls;
+    if (_url.indexOf("/dat/") > -1) {
+        //note: http://kohada.open2ch.net/yume/dat/1459780203.datの場合 <-> dat
+        //       urls[1] -> http://kohada.open2ch.net
+        //       urls[2] -> yume
+        //       urls[3] -> 1459780203
+        urls = _url.match(/(^.*open2ch.net)\/(.*)\/dat\/([0-9]{10})/);
+    } else if (_url.indexOf("read.cgi") > -1) {
+        //note: http://kohada.open2ch.net/test/read.cgi/yume/1459780203/l50の場合 <-> read.cgi
+        //       urls[1] -> http://kohada.open2ch.net
+        //       urls[2] -> yume
+        //       urls[3] -> 1459780203                
+        urls = _url.match(/(^.*open2ch.net)\/test\/read.cgi\/(.*)\/([0-9]{10})/);
+    } else {
+        //note: http://kohada.open2ch.net/yume/subback.html or
+        //      http://kohada.open2ch.net/yume/subject.txt or
+        //      http://kohada.open2ch.net/yume/ の場合
+        //       urls[1] -> http://kohada.open2ch.net
+        //       urls[2] -> yume
+        urls = _url.match(/(^.*open2ch.net)\/(.*)\//);
+    }
+
+    var saveobj;
+    if (_type === "favsure") {
+        saveobj = {
+            bbsname: urls[2],
+            bbsnameJ: null,
+            suretai: _title,
+            url: urls[1] + "/test/read.cgi/" + urls[2] + "/" + urls[3] + "/"
+        };
+    } else {
+        saveobj = {
+            bbsname: urls[2],
+            bbsnameJ: null,
+            url: urls[1] + "/" + urls[2] + "/"
+        };
+    }
+
+    //note: bbsnameJを確定させ、重複をチェックし、_bgobj/localStorageに値を格納する
+    var dupcheck;
+    var isDup;
+    var type = _type.substr(3);
+    _getLocalJSON("data/bbsname.json", function(parm) {
+        var bbsnameJ_maybe = parm[saveobj.bbsname];
+        if (bbsnameJ_maybe) {
+            saveobj.bbsnameJ = bbsnameJ_maybe;
+        } else {
+            var bbsnameJ_his = _bgobj.preserve.history[type].filter(function(elm) {
+                return elm.bbsname === saveobj.bbsname;
+            });
+            saveobj.bbsnameJ = bbsnameJ_his.length !== 0 ? bbsnameJ_his[0].bbsnameJ : saveobj.bbsname;
+        }
+
+        //note: 重複チェック
+        dupcheck = _bgobj.preserve.favorite[type].map(function(elm) {
+            return elm.url;
+        });
+        isDup = dupcheck.some(function(elm) {
+            return elm === saveobj.url;
+        });
+        if (!isDup) {
+            //note: 値の格納
+            _bgobj.preserve.favorite[type].unshift(saveobj);
+            _saveLocalStorage(_bgobj);
+        }
+
+        return;
+    });
+    return;
+}
+
+
+/*
     function _addFavSure(_title, _url) {
         var dupcheck = [];
         var isDup = true;
@@ -559,6 +633,7 @@ window.bg = (function() {
 
         return;
     }
+*/
 
     function _jumpToBbs(bbsname) {
         var bbsurl = _bgobj.preserve.favorite.ita.find(function(elm) {
@@ -679,11 +754,12 @@ window.bg = (function() {
     function _assignContextMenuLister() {
         chrome.contextMenus.onClicked.addListener(function(info, tab) {
             if (info.menuItemId === "favsure") {
-                _addFavSure(tab.title, tab.url);
+                //_addFavSure(tab.title, tab.url);
+                _addFav(tab.title, tab.url, info.menuItemId);
             }
 
             if (info.menuItemId === "favita") {
-                _addFavIta(tab.title, tab.url);
+                _addFav(tab.title, tab.url, info.menuItemId);
             }
 
             if (info.parentMenuItemId === "jump") {
