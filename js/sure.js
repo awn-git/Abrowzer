@@ -48,9 +48,6 @@
     //Messageに応じて処理を実行する
     function _assignEventHandler() {
         chrome.runtime.onMessage.addListener(function(parm, sender, sendResponse) {
-            if (parm.modoru === "yes") {
-                _addModoruLink();
-            }
             if (parm.abonetype !== "no") {
                 _doNGs(parm);
             }
@@ -68,30 +65,6 @@
             }
             return;
         });
-        return;
-    }
-
-
-    //スレ一覧に戻るリンクを埋め込む
-    function _addModoruLink() {
-        var _modoru;
-        var _modoru2;
-        var _dthreadboxlinks;
-
-        if (!document.querySelector("a.Abrowzered")) {
-            //make element
-            _modoru = document.createElement("a");
-            _modoru.setAttribute("href", "/" + _info.bbsname + "/subback.html");
-            _modoru.classList.add("Abrowzered");
-            _modoru.textContent = "★スレ一覧に戻る";
-            _modoru2 = _modoru.cloneNode(true);
-
-            //attach element
-            _dthreadboxlinks = document.getElementsByClassName("thread-box-links")
-            _dthreadboxlinks[0].appendChild(_modoru);
-            _dthreadboxlinks[1].appendChild(_modoru2);
-
-        }
         return;
     }
 

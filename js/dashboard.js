@@ -32,9 +32,6 @@
         "ngsuretai": null,
         "ngsuretairegexp": null
     }
-    var modorusavebtn = {
-        "modoru": null
-    };
 
 
 
@@ -52,9 +49,6 @@
         _setDashboard();
         _setSaveBtnEventListener("sure-savebtn", suresavebtn, _checkSureRegexp);
         _setSaveBtnEventListener("suretai-savebtn", suretaisavebtn, _checkSuretaiRegexp);
-        _setSaveBtnEventListener("modoru-savebtn", modorusavebtn, function(inp) {
-            return inp;
-        });
 
         _setChooseAllBtnEventListener("hisitaall", "his");
         _setChooseAllBtnEventListener("hissureall", "his");

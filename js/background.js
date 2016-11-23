@@ -39,7 +39,6 @@ window.bg = (function() {
         ngids: "",
         suretaiabone: "no",
         ngsuretai: "",
-        modoru: "no",
         ngkeywordregexp: "no",
         ngsuretairegexp: "no"
     };
