@@ -127,12 +127,12 @@ window.bg = (function() {
     };
 
     _conmenu.selecttext = {
-        title: "選択した文字を",
+        title: "「%s」を",
         type: "normal",
         id: "selecttext",
         parentId: "abrowzer",
         contexts: ["selection"],
-        documentUrlPatterns: ["http://*.open2ch.net/test/read.cgi/*"]
+        documentUrlPatterns: ["http://*.open2ch.net/test/read.cgi/*", "http://*.open2ch.net/*/dat/*"]
     };
 
     _conmenu.ngword = {
@@ -140,8 +140,7 @@ window.bg = (function() {
         type: "normal",
         id: "ngword",
         parentId: "selecttext",
-        contexts: ["selection"],
-        documentUrlPatterns: ["http://*.open2ch.net/test/read.cgi/*"]
+        contexts: ["selection"]
     };
 
     _conmenu.ngname = {
@@ -149,8 +148,7 @@ window.bg = (function() {
         type: "normal",
         id: "ngname",
         parentId: "selecttext",
-        contexts: ["selection"],
-        documentUrlPatterns: ["http://*.open2ch.net/test/read.cgi/*"]
+        contexts: ["selection"]
     };
 
     _conmenu.ngid = {
@@ -158,8 +156,7 @@ window.bg = (function() {
         type: "normal",
         id: "ngid",
         parentId: "selecttext",
-        contexts: ["selection"],
-        documentUrlPatterns: ["http://*.open2ch.net/test/read.cgi/*"]
+        contexts: ["selection"]
     };
 
     _conmenu.find = {
@@ -167,8 +164,7 @@ window.bg = (function() {
         type: "normal",
         id: "find",
         parentId: "selecttext",
-        contexts: ["selection"],
-        documentUrlPatterns: ["http://*.open2ch.net/test/read.cgi/*"]
+        contexts: ["selection"]
     };
 
     var _defaultconmenu = Object.keys(_conmenu);
@@ -258,15 +254,15 @@ window.bg = (function() {
         }
 
         //モードの切り替え
-        if( _bgobj.preserve.mode === "simplemode" ){
-            chrome.contextMenus.update("simplemode",{checked: true});
+        if (_bgobj.preserve.mode === "simplemode") {
+            chrome.contextMenus.update("simplemode", { checked: true });
         }
 
         //note: お気に入り板の登録ができるのは、板トップ|スレッド一覧|スレのみ(∵板の日本語名が取得できないため)
-        if( pagetype === "板トップ" || pagetype === "スレ一覧" || pagetype === "スレ" ){
-            chrome.contextMenus.update("favita", {enabled : true});
-        }else{
-            chrome.contextMenus.update("favita", {enabled : false});
+        if (pagetype === "板トップ" || pagetype === "スレ一覧" || pagetype === "スレ") {
+            chrome.contextMenus.update("favita", { enabled: true });
+        } else {
+            chrome.contextMenus.update("favita", { enabled: false });
         }
 
         return;
@@ -585,12 +581,17 @@ window.bg = (function() {
 
     function _findKeyword(url, keyword) {
         //note: 選択されたテキストは複数行あっても１行とみなされる
-        var bbsname = url.match(/^.*open2ch.net\/test\/read.cgi\/(.*)\/[0-9]{10}\//)[1];
+        var bbsname;
+        if (url.indexOf("/dat/") > -1) {
+            bbsname = url.match(/^.*open2ch.net\/(.*)\/dat\/[0-9]{10}/)[1];
+        } else {
+            bbsname = url.match(/^.*open2ch.net\/test\/read.cgi\/(.*)\/[0-9]{10}\//)[1];
+        }
 
         //note: "ID:"を含むテキストはIDを検索したいものとみなす
-        if( keyword.indexOf("ID:") > -1 ){
-            keyword = keyword.replace(/(.*)(ID:.*)/,"$2")
-                .replace("(主)","")
+        if (keyword.indexOf("ID:") > -1) {
+            keyword = keyword.replace(/(.*)(ID:.*)/, "$2")
+                .replace("(主)", "")
                 .replace("×", "")
                 .replace(/ /g, "");
         }

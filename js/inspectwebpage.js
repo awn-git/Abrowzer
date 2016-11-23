@@ -85,7 +85,7 @@
             case url.indexOf("index.rdf") > -1:
                 rtn = "RSS";
                 break;
-            case url.indexOf("dat") > -1:
+            case url.indexOf("/dat/") > -1:
                 rtn = "dat";
                 break;
             case url.indexOf("gomi.html") > -1:
