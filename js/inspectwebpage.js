@@ -65,7 +65,7 @@
                 rtn = "画像一覧";
                 break;
             case url.indexOf("subback.html") > -1:
-                rtn = "スレ一覧";
+                rtn = "スレッド一覧";
                 break;
             case url.indexOf("subject.txt") > -1:
                 rtn = "subject";

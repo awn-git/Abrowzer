@@ -99,7 +99,7 @@ window.bg = (function() {
         type: "normal",
         id: "extracturl",
         parentId: "abrowzer",
-        documentUrlPatterns: ["http://*.open2ch.net/test/read.cgi/*"]
+        documentUrlPatterns: ["http://*.open2ch.net/test/read.cgi/*", "http://*.open2ch.net/*/dat/*"]
     };
 
     _conmenu.favsure = {
@@ -107,7 +107,7 @@ window.bg = (function() {
         type: "normal",
         id: "favsure",
         parentId: "abrowzer",
-        documentUrlPatterns: ["http://*.open2ch.net/test/read.cgi/*"]
+        documentUrlPatterns: ["http://*.open2ch.net/test/read.cgi/*", "http://*.open2ch.net/*/dat/*"]
     };
 
     _conmenu.favita = {
@@ -115,7 +115,7 @@ window.bg = (function() {
         type: "normal",
         id: "favita",
         parentId: "abrowzer",
-        documentUrlPatterns: ["http://*.open2ch.net/*"]
+        documentUrlPatterns: ["http://*.open2ch.net/*", "http://*.open2ch.net/*/dat/*"]
     };
 
     _conmenu.download = {
@@ -240,12 +240,7 @@ window.bg = (function() {
 
         //お気に入りから板が削除された場合 -> コンテクストメニューからも削除する
         var temp_fav = Util.Array.diff(Object.keys(_conmenu), _defaultconmenu);
-        console.log("temp_fav: ", temp_fav); //コンテキストメニューに追加した板
-        console.log("favkeys", favkeys); //現在のお気に入り板
-        console.log("diffs: ", Util.Array.diff(temp_fav, favkeys)); //その差分
-
         var diffs = Util.Array.diff(temp_fav, favkeys);
-
         if (diffs.length > 0) {
             for (var ix = 0, len = diffs.length; ix < len; ix++) {
                 chrome.contextMenus.remove(diffs[ix]);
@@ -259,7 +254,7 @@ window.bg = (function() {
         }
 
         //note: お気に入り板の登録ができるのは、板トップ|スレッド一覧|スレのみ(∵板の日本語名が取得できないため)
-        if (pagetype === "板トップ" || pagetype === "スレ一覧" || pagetype === "スレ") {
+        if (pagetype === "板トップ" || pagetype === "スレッド一覧" || pagetype === "スレ" || pagetype === "dat" || pagetype === "subject") {
             chrome.contextMenus.update("favita", { enabled: true });
         } else {
             chrome.contextMenus.update("favita", { enabled: false });
@@ -279,7 +274,7 @@ window.bg = (function() {
                     case "スレ":
                         _injectSure(parm, sender);
                         break;
-                    case "スレ一覧":
+                    case "スレッド一覧":
                         _injectSubback(parm, sender);
                         break;
                     case "板トップ":
@@ -407,18 +402,40 @@ window.bg = (function() {
         chrome.tabs.executeScript(sender.tab.id, { file: "js/dat.js" }, function(response) {
             chrome.tabs.insertCSS(sender.tab.id, { file: "css/dat.css" });
             _bgobj.temporary = response[0];
-            _bgobj.temporary.bbsnameJ = _bgobj.preserve.history.ita.filter(function(elm) {
-                return elm.bbsname === _bgobj.temporary.bbsname;
-            })[0].bbsnameJ;
-            _storeHistory("sure", _bgobj.temporary);
+
+            _getLocalJSON("data/bbsname.json", function(parm) {
+                var bbsnameJ_maybe = parm[_bgobj.temporary.bbsname];
+                if(bbsnameJ_maybe){
+                    _bgobj.temporary.bbsnameJ = bbsnameJ_maybe;    
+                }else{
+                    var bbsnameJ_his = _bgobj.preserve.history.ita.filter(function(elm){return elm.bbsname === _bgobj.temporary.bbsname;});
+                    _bgobj.temporary.bbsnameJ = bbsnameJ_his.length !== 0 ? bbsnameJ_his[0].bbsnameJ : _bgobj.temporary.bbsname;
+                }
+                _storeHistory("sure", _bgobj.temporary);
+            });
         });
+        return;
+    }
+
+
+    function _getLocalJSON(filename, callback) {
+        var url = chrome.extension.getURL(filename);
+        var xhr = new XMLHttpRequest();
+        var obj;
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                obj = JSON.parse(xhr.responseText);
+                callback(obj);
+            }
+        }
+        xhr.open('GET', url, true);
+        xhr.send();
         return;
     }
 
     function _injectSubject(parm, sender) {
         chrome.tabs.executeScript(sender.tab.id, { file: "js/subject.js" }, function(response) {
             chrome.tabs.insertCSS(sender.tab.id, { file: "css/subject.css" });
-            console.dir(response[0]);
             return;
         });
         return;
@@ -427,7 +444,6 @@ window.bg = (function() {
     function _injectBbsmenu(parm, sender) {
         chrome.tabs.executeScript(sender.tab.id, { file: "js/bbsmenu.js" }, function(response) {
             chrome.tabs.insertCSS(sender.tab.id, { file: "css/bbsmenu.css" });
-            console.dir(response[0]);
             return;
         });
         return;
@@ -464,7 +480,6 @@ window.bg = (function() {
     }
 
     function _addFavSure(_title, _url) {
-        console.log("_addFavSure");
         var dupcheck = [];
         var isDup = true;
         var urltemp = _url.match(/(^.*read\.cgi)\/(.*)\/([0-9]{10})\//);
@@ -492,7 +507,6 @@ window.bg = (function() {
     }
 
     function _addFavIta(_title, _url) {
-        console.log("_addFavIta");
         var dupcheck = [];
         var isDup = true;
         var temp = {
@@ -531,8 +545,6 @@ window.bg = (function() {
             alert("うーん、板情報が取得できませんでした。。。");
             return;
         }
-
-        console.dir(temp);
 
         dupcheck = _bgobj.preserve.favorite.ita.map(function(elm) {
             return elm.url;
@@ -618,30 +630,39 @@ window.bg = (function() {
             keyword = keyword.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
         }
 
-        if (type === "ngword") {
-            if (_bgobj.preserve.dashboard.ngwords !== "") {
-                _bgobj.preserve.dashboard.ngwords += "\n" + keyword;
-            } else {
-                _bgobj.preserve.dashboard.ngwords = keyword;
-            }
+        var types = type + "s";
+
+        if (_bgobj.preserve.dashboard[types] !== "") {
+            _bgobj.preserve.dashboard[types] += "\n" + keyword;
+        } else {
+            _bgobj.preserve.dashboard[types] = keyword;
         }
 
-        if (type === "ngname") {
-            if (_bgobj.preserve.dashboard.ngnames !== "") {
-                _bgobj.preserve.dashboard.ngnames += "\n" + keyword;
-            } else {
-                _bgobj.preserve.dashboard.ngnames = keyword;
-            }
-        }
+        /*
+                if (type === "ngword") {
+                    if (_bgobj.preserve.dashboard.ngwords !== "") {
+                        _bgobj.preserve.dashboard.ngwords += "\n" + keyword;
+                    } else {
+                        _bgobj.preserve.dashboard.ngwords = keyword;
+                    }
+                }
 
-        if (type === "ngid") {
-            if (_bgobj.preserve.dashboard.ngids !== "") {
-                _bgobj.preserve.dashboard.ngids += "\n" + keyword;
-            } else {
-                _bgobj.preserve.dashboard.ngids = keyword;
-            }
-        }
+                if (type === "ngname") {
+                    if (_bgobj.preserve.dashboard.ngnames !== "") {
+                        _bgobj.preserve.dashboard.ngnames += "\n" + keyword;
+                    } else {
+                        _bgobj.preserve.dashboard.ngnames = keyword;
+                    }
+                }
 
+                if (type === "ngid") {
+                    if (_bgobj.preserve.dashboard.ngids !== "") {
+                        _bgobj.preserve.dashboard.ngids += "\n" + keyword;
+                    } else {
+                        _bgobj.preserve.dashboard.ngids = keyword;
+                    }
+                }
+        */
         _saveLocalStorage(_bgobj);
 
         return;
@@ -657,13 +678,6 @@ window.bg = (function() {
 
     function _assignContextMenuLister() {
         chrome.contextMenus.onClicked.addListener(function(info, tab) {
-            console.log("/******************************/")
-            console.log("info--------------");
-            console.dir(info);
-            console.log("tab--------------");
-            console.dir(tab);
-            console.log("/******************************/")
-
             if (info.menuItemId === "favsure") {
                 _addFavSure(tab.title, tab.url);
             }
@@ -702,8 +716,6 @@ window.bg = (function() {
 
     function _assignBeforeRq() {
         chrome.webRequest.onBeforeRequest.addListener(function(parm) {
-            console.log("onBeforeRequest");
-            console.dir(parm);
             var urltemp = parm.url.match(/(^.*\/)test\/read\.cgi\/(.*)\/([0-9]{10})/);;
             var url = urltemp[1] + urltemp[2] + "/dat/" + urltemp[3] + ".dat";
 
