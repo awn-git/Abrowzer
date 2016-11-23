@@ -54,3 +54,7 @@ body {
     margin-top: 1pt;
     margin-bottom: 10pt;
 }
+
+.broken {
+    color: black;
+}

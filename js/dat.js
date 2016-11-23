@@ -74,12 +74,19 @@
             .replace(/<>/g, " ")
             .replace(/https?:\/\/[a-zA-Z0-9-_.:@!~*';\/?&=+$,%#]+/g,
                 "<a href='$&' target='_blank'>$&</a>")
-            .replace(/&gt;&gt;([0-9]{1,3})/g, "<a href='#$1'>$&</a>");
+            .replace(/&gt;&gt;([0-9]{1,3})/g, "<a href='#$1'>$&</a>")
+            .replace("<b class='name'>あぼーん</b> <span class='mail'>あぼーん</span> あぼーん あぼーん あぼーん",
+                "<span class='name broken'>あぼーん</b> <span class='mail broken'>あぼーん</span> あぼーん <span class='id broken'>あぼーん</span></div><div class='resbody broken'>あぼーん</div>");
 
         resnum = "<a name='" + (ind + 1) + "'>" + (ind + 1) + "</a>" + " :";
         elm = resnum + " " + elm;
 
-        str = "<div class='res'><div class='reshead'>" + elm + "</div>";
+        if(elm.indexOf("<span class='name broken'>あぼーん</b> <span class='mail broken'>あぼーん</span> あぼーん <span class='id broken'>あぼーん</span></div><div class='resbody broken'>あぼーん</div>") > -1){
+                    str = "<div class='res broken'><div class='reshead broken'>" + elm + "</div>";            
+        }else{
+            str = "<div class='res'><div class='reshead'>" + elm + "</div>";            
+        }
+
         return str;
     });
 
