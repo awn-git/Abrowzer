@@ -12,7 +12,6 @@
 
 
 (function() {
-    var info;
     var d = document;
     var pre = d.getElementsByTagName("pre")[0];
     var arr = pre.innerText.split("\n");
@@ -20,89 +19,123 @@
     //note: preタグ内の最後に存在する「改行のみの行」を取り除く
     arr.pop();
 
-    var li = arr[0].lastIndexOf("<>");
-    var suretai = arr[0].substr(li+2);
+    var origin = location.origin;
+    var pathname = location.pathname;
+    var surekey = pathname.match(/[0-9]{10}/)[0];
+    var bbsname = pathname.match(/^\/(.*?)\//)[1];
+    var suretai = arr[0].match(/^(.*?)<>(.*?)<>(.*?) ID:(.*?)<> (.*?) <>(.*?)$/)[6];
+
     d.title = suretai;
-    arr[0] = arr[0].substr(0,li);
 
-    var lh = location.href.match(/(^.*open2ch.net\/)(.*)\/dat\/([0-9]{10})/);
-    var host = lh[1];
-    var bbsname = lh[2];
-    var surekey = lh[3];
-    var surehtml = host + "test/read.cgi/" + bbsname + "/" + surekey + "/";
-    var gazou = host + "test/image.cgi/" + bbsname + "/" + surekey + "/";
-    var matomeru = "https://2mtmex.com/?url=" + surehtml;
-    var itatop = host + bbsname;
-    var subback = itatop + "/" + "subback.html";
-    var subject = itatop + "/" + "subject.txt";
+    var readcgi = origin + "/test/read.cgi/" + bbsname + "/" + surekey + "/";
+    var imagecgi = origin + "/test/image.cgi/" + bbsname + "/" + surekey + "/";
+    var matomeru = "https://2mtmex.com/?url=" + readcgi;
+    var itatop = origin + "/" + bbsname + "/";
+    var subject = itatop + "subject.txt";
+    var subback = itatop + "subback.html";
+    var bbsmenu = "http://open2ch.net/bbsmenu.html";
+    var rireki = "http://open2ch.net/test/history.cgi";
 
-    var header = "";
-    header += "<a href='http://menu.open2ch.net/bbsmenu.html'>★BBSMENU</a><br>";
-    header += "<a href='" + itatop + "/'>■板に戻る</a>";
-    header += "<a href='http://open2ch.net/test/history.cgi'>履歴</a>";
-    header += "<a href='" + subback + "'>★スレッド一覧</a>";
-    header += "<a href='" + subject + "'>★スレッド一覧(大漁)</a>";
-    header += "<a href='" + surehtml + "l50'>read.cgi</a>";
-    header += "<a href='#bottom'>↓</a><a name='top'></a><br>";
-    header += "<a href='" + matomeru + "'>まとめる</a>";
-    header += "<a href='" + gazou + "'>★画像一覧</a>";
-    header += "<hr>";
-    header += "<h3 style='color:red;'>" + suretai + "</h3>";
+    var datobj = {
+        info: {
+            suretai: suretai,
+            url: readcgi,
+            bbsname: bbsname,
+            bbsnameJ: null,
+        },
+        res: []
+    };
 
-    var footer = "";
-    footer += "<hr>";
-    footer += "<div style='text-align:center'><a href='" + location.href + "' id='newres'>新着レスの表示</a><a>|</a><a href='#bottom' id='kokomade'>ここまで読んだ？</a></div>";
-    footer += "<hr>";
-    footer += "<a href='http://menu.open2ch.net/bbsmenu.html'>★BBSMENU</a><br>";
-    footer += "<a href='" + itatop + "/'>■板に戻る</a>";
-    footer += "<a href='http://open2ch.net/test/history.cgi'>履歴</a>";
-    footer += "<a href='" + subback + "'>★スレッド一覧</a>";
-    footer += "<a href='" + subject + "'>★スレッド一覧(大漁)</a>";
-    footer += "<a href='" + surehtml + "l50'>read.cgi</a>";
-    footer += "<a href='#top'>↑</a><a name='bottom'></a><br>";
-    footer += "<a href='" + matomeru + "'>まとめる</a>";
-    footer += "<a href='" + gazou + "'>★画像一覧</a>";
-
-    var resnum;
-    var arrmap = arr.map(function(elm, ind) {
-        elm = elm.replace(/<\/?b>/g, "")
-            .replace(/^(.*?)<+?>+?/, "<b class='name'>$&</b>")
-            .replace(/ID:(.*?)<+?>+? /, "<span class='id'>$1</span>")
-            .replace(/<\/span>(.*$)/, "<\/span></div><div class='resbody'>$1</div>")
-            .replace(/<><\/b>(.*?)<>/,"<\/b> <span class='mail'>$1</span> ")
-            .replace(/ <>/, "")
-            .replace(/<>/g, " ")
-            .replace(/https?:\/\/[a-zA-Z0-9-_.:@!~*';\/?&=+$,%#]+/g,
-                "<a href='$&' target='_blank'>$&</a>")
-            .replace(/&gt;&gt;([0-9]{1,4})/g, "<a href='#$1'>$&</a>")
-            .replace("<b class='name'>あぼーん</b> <span class='mail'>あぼーん</span> あぼーん あぼーん あぼーん",
-                "<span class='name broken'>あぼーん</b> <span class='mail broken'>あぼーん</span> あぼーん <span class='id broken'>あぼーん</span></div><div class='resbody broken'>あぼーん</div>");
-
-        resnum = "<a name='" + (ind + 1) + "'>" + (ind + 1) + "</a>" + " :";
-        elm = resnum + " " + elm;
-
-        if(elm.indexOf("<span class='name broken'>あぼーん</b> <span class='mail broken'>あぼーん</span> あぼーん <span class='id broken'>あぼーん</span></div><div class='resbody broken'>あぼーん</div>") > -1){
-                    str = "<div class='res broken'><div class='reshead broken'>" + elm + "</div>";            
-        }else{
-            str = "<div class='res'><div class='reshead'>" + elm + "</div>";            
+    var parse;
+    var parse_regexp = new RegExp(/^(.*?)<>(.*?)<>(.*?) ID:(.*?)<> (.*?) <>/);
+    for (var ix = 0, len = arr.length; ix < len; ix++) {
+        parse = arr[ix].match(parse_regexp);
+        if (parse) {
+            datobj.res.push({
+                name: parse[1].trim(),
+                mail: parse[2],
+                timestamp: parse[3],
+                id: parse[4],
+                text: parse[5]
+            });
+        } else {
+            datobj.res.push({
+                name: "あぼーん",
+                mail: "あぼーん",
+                timestamp: "あぼーん",
+                id: "あぼーん",
+                text: "あぼーん"
+            });
         }
+    }
+
+    var threadhtml = [];
+    var str = "";
+    var extra = "";
+    var text_temp = "";
+
+    var b_regexp = new RegExp(/<\/?b>/, "g");
+    var anka_regexp = new RegExp(/&gt;&gt;([0-9]{1,4})/, "g");
+    var url_regexp = new RegExp(/https?:\/\/[a-zA-Z0-9-_.:@!~*';\/?&=+$,%#]+/, "g");
+
+    threadhtml = datobj.res.map(function(elm, ind) {
+        extra = elm.timestamp === "あぼーん" ? " broken" : "";
+        str = "<div class='res" + extra + "'>";
+        str += "<div class='reshead" + extra + "'>";
+        str += "<a name='" + (ind + 1) + "' class='resnum" + extra + "'>" + (ind + 1) + "</a>";
+        str += "<span class='name" + extra + "'>" + elm.name.replace(b_regexp, "") + "</span>";
+        str += "<span class='mail" + extra + "'>" + elm.mail + "</span>";
+        str += "<span class='timestamp" + extra + "'>" + elm.timestamp + "</span>";
+        str += "<span class='id" + extra + "'>" + elm.id + "</span>";
+        str += "</div>";
+        text_temp = elm.text.replace(anka_regexp, "<a href='#$1'>$&</a>")
+            .replace(url_regexp, "<a href='$&' target='_blank'>$&</a>");
+        str += "<div class='resbody" + extra + "'>" + text_temp + "</div>";
+        str += "</div>";
 
         return str;
     });
+
+
+    var header = "";
+    header += "<a href='" + bbsmenu + "'>BBSMENU</a><br>";
+    header += "<a href='" + itatop + "'>板に戻る</a>";
+    header += "<a href='" + rireki + "'>履歴</a>";
+    header += "<a href='" + subback + "'>スレッド一覧</a>";
+    header += "<a href='" + subject + "'>スレッド一覧(大漁)</a>";
+    header += "<a href='" + readcgi + "'>read.cgi</a>";
+    header += "<a href='#bottom'>↓</a><a name='top'></a><br>";
+    header += "<a href='" + matomeru + "'>まとめる</a>";
+    header += "<a href='" + imagecgi + "'>画像一覧</a>";
+    header += "<hr>";
+    header += "<h3 id='suretai'>" + suretai + "</h3>";
+
+    var footer = "";
+    footer += "<hr>";
+    footer += "<a href='" + bbsmenu + "'>BBSMENU</a><br>";
+    footer += "<a href='" + itatop + "'>板に戻る</a>";
+    footer += "<a href='" + rireki + "'>履歴</a>";
+    footer += "<a href='" + subback + "'>スレッド一覧</a>";
+    footer += "<a href='" + subject + "'>スレッド一覧(大漁)</a>";
+    footer += "<a href='" + readcgi + "'>read.cgi</a>";
+    footer += "<a href='#top'>↑</a><a name='bottom'></a><br>";
+    footer += "<a href='" + matomeru + "'>まとめる</a>";
+    footer += "<a href='" + imagecgi + "'>画像一覧</a>";
 
     var phorm = "";
     phorm += "<form method='POST' action='/test/bbs.cgi?guid=ON' id='form2' style='margin-top:5pt'>";
     phorm += "<input type='submit' value='書き込む' name='submit' id='submit_button'></input> ";
     phorm += "名前：" + "<input size='10' id='FROM' NAME='FROM'></input> ";
-    phorm += "mail: " + "<input size='10' id='mail' name='mail'></input><br>";
+    phorm += "mail：" + "<input size='10' id='mail' name='mail'></input><br>";
     phorm += "<textarea rows='5' cols='56' id='MESSAGE' name='MESSAGE'></textarea>";
     phorm += "<input type='hidden' name='bbs' value='" + bbsname + "'>";
     phorm += "<input type='hidden' name='key' value='" + surekey + "'>";
     phorm += "<input type='hidden' name='time' value='" + Math.floor(Date.now() / 1000) + "'>";
     phorm += "</form>";
 
-    var bodyinner = "<div class='header'>" + header + "</div>";
-    bodyinner += "<div class=thread>" + arrmap.join("") + "</div>";
+    var bodyinner = "";
+    bodyinner += "<div class='header'>" + header + "</div>";
+    bodyinner += "<div class='thread'>" + threadhtml.join("") + "</div>";
     bodyinner += "<div class='footer'>" + footer + "</div>";
     bodyinner += "<div class='form'>" + phorm + "</div>";
 
@@ -113,40 +146,6 @@
     //note: 　どうやらdatパース前のscrollheightに移動してしまうようだ。
     window.scrollTo(0, 0);
 
-    kokomade();
-    newres();
+    return datobj.info;
 
-    function kokomade() {
-        var elm = d.getElementById("kokomade");
-        elm.addEventListener("click", function() {
-            alert("そうですか。お疲れ様です。");
-            return;
-        });
-    }
-
-    function newres() {
-        var elm = d.getElementById("newres");
-        elm.addEventListener("click", function() {
-            location.reload(true);
-            return;
-        });
-    }
-
-    function getPageInfo(){
-        var info = {
-            bbsname: null,
-            bbsnameJ: null,
-            url: null,
-            suretai: null
-        }
-
-        info.bbsname = bbsname;
-        info.url = host + "test/read.cgi/" + bbsname + "/" + surekey + "/";
-        info.suretai = suretai;
-
-        return info;
-    }
-
-    info = getPageInfo();
-    return info;
 })();

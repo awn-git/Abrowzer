@@ -23,8 +23,13 @@ a:visited {
     color: #660099;
 }
 
+#suretai{
+    color:red;
+}
+
 .name {
-     color: green;
+    font-weight: bold;
+    color: green;
 }
 
 .mail {
@@ -35,12 +40,12 @@ a:visited {
     color: gray;
 }
 
-div.header a {
+.header a {
     display: inline;
     margin-right : 5px;
 }
 
-div.footer a {
+.footer a {
     display: inline;
     margin-right : 5px;
 }
@@ -53,6 +58,31 @@ body {
     margin-left: 20pt;
     margin-top: 1pt;
     margin-bottom: 10pt;
+}
+
+.resnum:after{
+    content:" : ";
+}
+
+.name:after{
+    content:" ";
+}
+
+
+.mail:before {
+    content:"[";
+}
+
+.mail:after {
+    content:"]";
+}
+
+.timestamp:before {
+    content:" ";
+}
+
+.id:before{
+    content:" ID:";
 }
 
 .broken {
