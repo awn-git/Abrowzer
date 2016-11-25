@@ -399,16 +399,27 @@ window.bg = (function() {
     }
 
     function _injectDat(parm, sender) {
+        var bbsname = sender.url.match(/^.*open2ch.net\/(.*?)\/dat\/[0-9]{10}.dat/)[1];
+        var user_css = "css/" + bbsname + ".css";
+
         chrome.tabs.executeScript(sender.tab.id, { file: "js/dat.js" }, function(response) {
-            chrome.tabs.insertCSS(sender.tab.id, { file: "css/dat.css" });
+            chrome.tabs.insertCSS(sender.tab.id, { file: user_css }, function(parm) {
+                if (chrome.runtime.lastError) {
+                    console.log("insert css/dat.css because " + user_css + " was not found.");
+                    chrome.tabs.insertCSS(sender.tab.id, { file: "css/dat.css" });
+                }
+            });
+
             _bgobj.temporary = response[0];
 
             _getLocalJSON("data/bbsname.json", function(parm) {
                 var bbsnameJ_maybe = parm[_bgobj.temporary.bbsname];
-                if(bbsnameJ_maybe){
-                    _bgobj.temporary.bbsnameJ = bbsnameJ_maybe;    
-                }else{
-                    var bbsnameJ_his = _bgobj.preserve.history.ita.filter(function(elm){return elm.bbsname === _bgobj.temporary.bbsname;});
+                if (bbsnameJ_maybe) {
+                    _bgobj.temporary.bbsnameJ = bbsnameJ_maybe;
+                } else {
+                    var bbsnameJ_his = _bgobj.preserve.history.ita.filter(function(elm) {
+                        return elm.bbsname === _bgobj.temporary.bbsname;
+                    });
                     _bgobj.temporary.bbsnameJ = bbsnameJ_his.length !== 0 ? bbsnameJ_his[0].bbsnameJ : _bgobj.temporary.bbsname;
                 }
                 _storeHistory("sure", _bgobj.temporary);
@@ -450,6 +461,7 @@ window.bg = (function() {
     }
 
     function _injectImagelist(parm, sender) {
+        chrome.tabs.executeScript(sender.tab.id, { file: "js/image.js" }, function() {});
         return;
     }
 
@@ -479,161 +491,77 @@ window.bg = (function() {
         return;
     }
 
-function _addFav(_title, _url, _type) {
-    var urls;
-    if (_url.indexOf("/dat/") > -1) {
-        //note: http://kohada.open2ch.net/yume/dat/1459780203.datの場合 <-> dat
-        //       urls[1] -> http://kohada.open2ch.net
-        //       urls[2] -> yume
-        //       urls[3] -> 1459780203
-        urls = _url.match(/(^.*open2ch.net)\/(.*)\/dat\/([0-9]{10})/);
-    } else if (_url.indexOf("read.cgi") > -1) {
-        //note: http://kohada.open2ch.net/test/read.cgi/yume/1459780203/l50の場合 <-> read.cgi
-        //       urls[1] -> http://kohada.open2ch.net
-        //       urls[2] -> yume
-        //       urls[3] -> 1459780203                
-        urls = _url.match(/(^.*open2ch.net)\/test\/read.cgi\/(.*)\/([0-9]{10})/);
-    } else {
-        //note: http://kohada.open2ch.net/yume/subback.html or
-        //      http://kohada.open2ch.net/yume/subject.txt or
-        //      http://kohada.open2ch.net/yume/ の場合
-        //       urls[1] -> http://kohada.open2ch.net
-        //       urls[2] -> yume
-        urls = _url.match(/(^.*open2ch.net)\/(.*)\//);
-    }
-
-    var saveobj;
-    if (_type === "favsure") {
-        saveobj = {
-            bbsname: urls[2],
-            bbsnameJ: null,
-            suretai: _title,
-            url: urls[1] + "/test/read.cgi/" + urls[2] + "/" + urls[3] + "/"
-        };
-    } else {
-        saveobj = {
-            bbsname: urls[2],
-            bbsnameJ: null,
-            url: urls[1] + "/" + urls[2] + "/"
-        };
-    }
-
-    //note: bbsnameJを確定させ、重複をチェックし、_bgobj/localStorageに値を格納する
-    var dupcheck;
-    var isDup;
-    var type = _type.substr(3);
-    _getLocalJSON("data/bbsname.json", function(parm) {
-        var bbsnameJ_maybe = parm[saveobj.bbsname];
-        if (bbsnameJ_maybe) {
-            saveobj.bbsnameJ = bbsnameJ_maybe;
+    function _addFav(_title, _url, _type) {
+        var urls;
+        if (_url.indexOf("/dat/") > -1) {
+            //note: http://kohada.open2ch.net/yume/dat/1459780203.datの場合 <-> dat
+            //       urls[1] -> http://kohada.open2ch.net
+            //       urls[2] -> yume
+            //       urls[3] -> 1459780203
+            urls = _url.match(/(^.*open2ch.net)\/(.*)\/dat\/([0-9]{10})/);
+        } else if (_url.indexOf("read.cgi") > -1) {
+            //note: http://kohada.open2ch.net/test/read.cgi/yume/1459780203/l50の場合 <-> read.cgi
+            //       urls[1] -> http://kohada.open2ch.net
+            //       urls[2] -> yume
+            //       urls[3] -> 1459780203                
+            urls = _url.match(/(^.*open2ch.net)\/test\/read.cgi\/(.*)\/([0-9]{10})/);
         } else {
-            var bbsnameJ_his = _bgobj.preserve.history[type].filter(function(elm) {
-                return elm.bbsname === saveobj.bbsname;
-            });
-            saveobj.bbsnameJ = bbsnameJ_his.length !== 0 ? bbsnameJ_his[0].bbsnameJ : saveobj.bbsname;
+            //note: http://kohada.open2ch.net/yume/subback.html or
+            //      http://kohada.open2ch.net/yume/subject.txt or
+            //      http://kohada.open2ch.net/yume/ の場合
+            //       urls[1] -> http://kohada.open2ch.net
+            //       urls[2] -> yume
+            urls = _url.match(/(^.*open2ch.net)\/(.*)\//);
         }
 
-        //note: 重複チェック
-        dupcheck = _bgobj.preserve.favorite[type].map(function(elm) {
-            return elm.url;
-        });
-        isDup = dupcheck.some(function(elm) {
-            return elm === saveobj.url;
-        });
-        if (!isDup) {
-            //note: 値の格納
-            _bgobj.preserve.favorite[type].unshift(saveobj);
-            _saveLocalStorage(_bgobj);
-        }
-
-        return;
-    });
-    return;
-}
-
-
-/*
-    function _addFavSure(_title, _url) {
-        var dupcheck = [];
-        var isDup = true;
-        var urltemp = _url.match(/(^.*read\.cgi)\/(.*)\/([0-9]{10})\//);
-
-        var temp = {
-            bbsname: urltemp[1],
-            bbsnameJ: _bgobj.preserve.history.sure.filter(function(elm) {
-                return elm.bbsname === urltemp[2];
-            })[0].bbsnameJ,
-            suretai: _title,
-            url: (urltemp[1] + "/" + urltemp[2] + "/" + urltemp[3] + "/")
-        };
-
-        dupcheck = _bgobj.preserve.favorite.sure.map(function(elm) {
-            return elm.url;
-        });
-        isDup = dupcheck.some(function(elm) {
-            return elm === temp.url;
-        });
-        if (!isDup) {
-            _bgobj.preserve.favorite.sure.unshift(temp);
-            _saveLocalStorage(_bgobj);
-        }
-        return;
-    }
-
-    function _addFavIta(_title, _url) {
-        var dupcheck = [];
-        var isDup = true;
-        var temp = {
-            bbsname: "",
-            bbsnameJ: "",
-            url: ""
-        };
-        var _pagetype = "";
-        var urltemp = "";
-
-        if (_url.match(/(^.*open2ch\.net\/).*read.cgi\/(.*)\/[0-9]{10}\//)) {
-            urltemp = _url.match(/(^.*open2ch\.net\/).*read.cgi\/(.*)\/[0-9]{10}\//);
-            _pagetype = "sure";
+        var saveobj;
+        if (_type === "favsure") {
+            saveobj = {
+                bbsname: urls[2],
+                bbsnameJ: null,
+                suretai: _title,
+                url: urls[1] + "/test/read.cgi/" + urls[2] + "/" + urls[3] + "/"
+            };
         } else {
-            urltemp = _url.match(/.*open2ch\.net\/(.*)\//);
-            _pagetype = "ita";
+            saveobj = {
+                bbsname: urls[2],
+                bbsnameJ: null,
+                url: urls[1] + "/" + urls[2] + "/"
+            };
         }
 
-        try {
-            if (_pagetype === "ita") {
-                temp.url = urltemp[0];
-                temp.bbsname = urltemp[1];
-                temp.bbsnameJ = _bgobj.preserve.history.ita.filter(function(elm) {
-                    return elm.bbsname === urltemp[1];
-                })[0].bbsnameJ;
-            } else if (_pagetype === "sure") {
-                temp.url = urltemp[1] + urltemp[2] + "/";
-                temp.bbsname = urltemp[2];
-                temp.bbsnameJ = _bgobj.preserve.history.sure.filter(function(elm) {
-                    return elm.bbsname === urltemp[2];
-                })[0].bbsnameJ;
+        //note: bbsnameJを確定させ、重複をチェックし、_bgobj/localStorageに値を格納する
+        var dupcheck;
+        var isDup;
+        var type = _type.substr(3);
+        _getLocalJSON("data/bbsname.json", function(parm) {
+            var bbsnameJ_maybe = parm[saveobj.bbsname];
+            if (bbsnameJ_maybe) {
+                saveobj.bbsnameJ = bbsnameJ_maybe;
             } else {
-                return;
+                var bbsnameJ_his = _bgobj.preserve.history[type].filter(function(elm) {
+                    return elm.bbsname === saveobj.bbsname;
+                });
+                saveobj.bbsnameJ = bbsnameJ_his.length !== 0 ? bbsnameJ_his[0].bbsnameJ : saveobj.bbsname;
             }
-        } catch (e) {
-            alert("うーん、板情報が取得できませんでした。。。");
+
+            //note: 重複チェック
+            dupcheck = _bgobj.preserve.favorite[type].map(function(elm) {
+                return elm.url;
+            });
+            isDup = dupcheck.some(function(elm) {
+                return elm === saveobj.url;
+            });
+            if (!isDup) {
+                //note: 値の格納
+                _bgobj.preserve.favorite[type].unshift(saveobj);
+                _saveLocalStorage(_bgobj);
+            }
+
             return;
-        }
-
-        dupcheck = _bgobj.preserve.favorite.ita.map(function(elm) {
-            return elm.url;
         });
-        isDup = dupcheck.some(function(elm) {
-            return elm === temp.url;
-        });
-        if (!isDup) {
-            _bgobj.preserve.favorite.ita.unshift(temp);
-            _saveLocalStorage(_bgobj);
-        }
-
         return;
     }
-*/
 
     function _jumpToBbs(bbsname) {
         var bbsurl = _bgobj.preserve.favorite.ita.find(function(elm) {
@@ -713,33 +641,32 @@ function _addFav(_title, _url, _type) {
             _bgobj.preserve.dashboard[types] = keyword;
         }
 
-        /*
-                if (type === "ngword") {
-                    if (_bgobj.preserve.dashboard.ngwords !== "") {
-                        _bgobj.preserve.dashboard.ngwords += "\n" + keyword;
-                    } else {
-                        _bgobj.preserve.dashboard.ngwords = keyword;
-                    }
-                }
-
-                if (type === "ngname") {
-                    if (_bgobj.preserve.dashboard.ngnames !== "") {
-                        _bgobj.preserve.dashboard.ngnames += "\n" + keyword;
-                    } else {
-                        _bgobj.preserve.dashboard.ngnames = keyword;
-                    }
-                }
-
-                if (type === "ngid") {
-                    if (_bgobj.preserve.dashboard.ngids !== "") {
-                        _bgobj.preserve.dashboard.ngids += "\n" + keyword;
-                    } else {
-                        _bgobj.preserve.dashboard.ngids = keyword;
-                    }
-                }
-        */
         _saveLocalStorage(_bgobj);
 
+        return;
+    }
+
+    function _execDownload(tab_image) {
+        chrome.tabs.query({ title: "Abrowzer::Result" }, function(query) {
+            if (query.length !== 0) {
+                chrome.tabs.update(query[0].id, { active: true });
+                alert("お手数ですがこのページは閉じてください。");
+            } else {
+                chrome.tabs.create({ url: chrome.runtime.getURL("html/result.html") }, function(tab_result) {
+                    chrome.tabs.sendMessage(tab_image.id, { getimages: "getimages" }, function(parm_image) {
+                        //note: tabs.createしてからresult.jsがlistenするのにほんの少し時間がかかるので
+                        //       2000ミリ秒ほど待機してからメッセージを送信する
+                        chrome.alarms.create("send_to_result", { when: Date.now() + 2000 });
+                        chrome.alarms.onAlarm.addListener(function(alarm) {
+                            if (alarm.name === "send_to_result") {
+                                chrome.tabs.sendMessage(tab_result.id, { download: parm_image });
+                            }
+                        });
+                    });
+                });
+                return;
+            }
+        });
         return;
     }
 
@@ -754,7 +681,6 @@ function _addFav(_title, _url, _type) {
     function _assignContextMenuLister() {
         chrome.contextMenus.onClicked.addListener(function(info, tab) {
             if (info.menuItemId === "favsure") {
-                //_addFavSure(tab.title, tab.url);
                 _addFav(tab.title, tab.url, info.menuItemId);
             }
 
@@ -784,6 +710,10 @@ function _addFav(_title, _url, _type) {
 
             if (info.parentMenuItemId === "mode") {
                 _switchCurrentMode(info.menuItemId);
+            }
+
+            if (info.menuItemId === "download") {
+                _execDownload(tab);
             }
 
         });
