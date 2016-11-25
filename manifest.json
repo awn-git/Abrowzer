@@ -8,7 +8,7 @@
   "description": "Abrowzerはぶらぶらと良い暇つぶしをするための、おーぷん２ちゃんねる内で動作するGoogle Chrome拡張機能です。",
 
   "permissions":[
-  "tabs","storage","contextMenus","webRequest","webRequestBlocking","downloads", "http://*.open2ch.net/*","https://*.open2ch.net/*"
+  "tabs","storage","contextMenus","webRequest","webRequestBlocking","downloads","alarms", "http://*.open2ch.net/*","https://*.open2ch.net/*"
   ],
 
   "content_scripts":[
