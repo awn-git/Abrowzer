@@ -30,8 +30,8 @@
 
     function _getPageInfo() {
         var d = document;
-        var url = "http://" + location.host + location.pathname;
         var bbsname = location.pathname.match("\/(.*?)\/")[1];
+        var url = "http://" + location.host + "/" + bbsname + "/";
         var bbsname_temp = d.getElementsByTagName("h1")[0].innerText;
         var bbsnameJ = bbsname_temp.substr(0, bbsname_temp.lastIndexOf("＠おーぷん２ちゃんねる"));
 
