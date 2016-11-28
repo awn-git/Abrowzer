@@ -14,7 +14,7 @@
 (function() {
     //private member
     var _info = {};
-    var _suretaiobj;
+    var _sureobj;
     var _header;
     var _footer;
     var _form;
@@ -29,8 +29,6 @@
 
         _info = _getPageInfo(dat_arr);
         _sureobj = _getSureObj(dat_arr);
-        console.dir(_info);
-        console.dir(_sureobj);
 
         _header = _generateHeaderHTML(_info);
         _footer = _generateFooterHTML(_info);
@@ -46,13 +44,20 @@
             var ng_target = [-1];
             var dat_content;
 
-            if (parm.contexts.resabone === "yes") {
-                regexp_arr = _getRegExps(parm.dashboard);
-                ng_target = _detectNGRes(_sureobj, regexp_arr);
+            if (parm.contexts) {
+                if (parm.contexts.resabone === "yes") {
+                    regexp_arr = _getRegExps(parm.dashboard);
+                    ng_target = _detectNGRes(_sureobj, regexp_arr);
+                }
             }
 
             dat_content = _generateSureHTML(_sureobj, ng_target);
             _replaceSubjectPage(_header, dat_content, _footer, _form);
+
+
+            if (parm.extracturl === "extracturl") {
+                sendResponse(_sureobj);
+            }
 
             return;
         });
@@ -71,6 +76,8 @@
         var lh = location.href.match(/(^.*open2ch.net)\/(.*)\/dat\/([0-9]{10})\.dat/);
         var readcgi = lh[1] + "/test/read.cgi/" + lh[2] + "/" + lh[3] + "/";
         var bbsname = lh[2];
+
+        document.title = suretai;
 
         obj = {
             suretai: suretai,
@@ -309,6 +316,6 @@
         return;
     }
 
-
+    debugger;
     return _info;
 })();

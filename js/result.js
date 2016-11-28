@@ -31,6 +31,11 @@
             if (message.download) {
                 execDownload(message.download);
             }
+
+            if (message.extracturl) {
+                showURLs(message.extracturl);
+            }
+
         });
         return;
     }
@@ -60,13 +65,13 @@
         var imagelist = obj.images.map(function(elm) {
             return "<li>" + elm + "</li>";
         });
-        result.innerHTML = "<ol>" + imagelist.join("") + "</ol>"
+        result.innerHTML = "<ol>" + imagelist.join("") + "</ol>";
 
         var fileurl;
         var filename;
         var filepath;
         if (confirm("大量のダウンロードにはリスクが伴います。\nそれでもあなたはダウンロードを実行しますか？")) {
-            var timestamp = (new Date().getFullYear()) + "" + ("0" + (new Date().getMonth() + 1) ).substr(-2) + "" + ("0" + new Date().getDate()).substr(-2) + "_" + ("0" + new Date().getHours()).substr(-2) + "" + ("0" + new Date().getMinutes()).substr(-2) + "" + ("0" + new Date().getSeconds()).substr(-2) + "_" + ("000" + new Date().getMilliseconds()).substr(-3);
+            var timestamp = (new Date().getFullYear()) + "" + ("0" + (new Date().getMonth() + 1)).substr(-2) + "" + ("0" + new Date().getDate()).substr(-2) + "_" + ("0" + new Date().getHours()).substr(-2) + "" + ("0" + new Date().getMinutes()).substr(-2) + "" + ("0" + new Date().getSeconds()).substr(-2) + "_" + ("000" + new Date().getMilliseconds()).substr(-3);
 
             var message = "ダウンロード先のフォルダ名を入力してください。\n";
             message += "- 未入力で[OK]を押した場合は、\n";
@@ -75,14 +80,14 @@
             message += "- ダウンロードを中止します。";
 
             var path = prompt(message);
-            if(path === null){
+            if (path === null) {
                 alert("ダウンロードを中止しました。");
                 removeResultPage();
                 return;
             }
 
             path = path.trim();
-            path = path === "" ? timestamp : path; 
+            path = path === "" ? timestamp : path;
 
             for (var ix = 0, len = obj.images.length; ix < len; ix++) {
                 fileurl = obj.images[ix];
@@ -100,6 +105,45 @@
         } else {
             alert("ダウンロードを中止しました。");
         }
+        removeResultPage();
+        return;
+    }
+
+    function showURLs(obj) {
+        console.dir(obj);
+        //var url_regexp = new RegExp(/https?:\/\/[a-zA-Z0-9-_.:@!~*';\/?&=+$,%#]+/, "g");
+        var url_regexp = new RegExp(/https?:\/\/[a-zA-Z0-9-_.:@!~*;\/?&=+$,%#]+/, "g");
+        var output = [];
+        var res;
+
+        if(obj.res){
+         res = obj.res;    
+        }else{
+            res = obj;
+        }
+        
+
+        var temp;
+        for (var ix = 0, len = res.length; ix < len; ix++) {
+            temp = res[ix].text.match(url_regexp);
+            if (temp) {
+                for (var ixx = 1, lenx = temp.length; ixx < lenx; ixx++) {
+                    output.push(temp[ixx]);
+                }
+            }
+        }
+        console.dir(output);
+
+        d.getElementById("h1").innerText = "URL抽出結果";
+        output = output.filter(function(elm,ind,arr){
+            return arr.indexOf(elm) === ind;
+        });
+        debugger;
+        alert("datの時何かがおかしい。。。")
+        var urllist = output.map(function(elm) {
+            return "<li>" + elm + "</li>";
+        });
+        result.innerHTML = "<ol>" + urllist.join("") + "</ol>";
         removeResultPage();
         return;
     }

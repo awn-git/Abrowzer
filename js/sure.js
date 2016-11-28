@@ -44,19 +44,29 @@
 
     function _assignEventHandler() {
         chrome.runtime.onMessage.addListener(function(parm, sender, sendResponse) {
+            var resobj;
+            var regexpobj;
 
-            if (parm.contexts.resabone === "yes") {
-                var resobj = _getResObj(document);
-                var regexpobj = _getRegExps(parm.dashboard);
-                _execResAbone(resobj, regexpobj);
+            resobj = _getResObj(document);
+
+            if (parm.contexts) {
+                if (parm.contexts.resabone === "yes") {
+                    regexpobj = _getRegExps(parm.dashboard);
+                    _execResAbone(resobj, regexpobj);
+                }
+
+                if (parm.contexts.imgurabone === "yes") {
+                    _execImgurAbone(document);
+                }
+
+                if (parm.contexts.oekakiabone === "yes") {
+                    _execOekakiAbone(document);
+                }
+
             }
 
-            if (parm.contexts.imgurabone === "yes") {
-                _execImgurAbone(document);
-            }
-
-            if (parm.contexts.oekaki === "yes") {
-                _execOekakiAbone(document);
+            if (parm.extracturl === "extracturl") {
+                sendResponse(resobj);
             }
 
             return;
@@ -65,7 +75,7 @@
     }
 
     function _execImgurAbone(d) {
-        var imgur = d.getElementsByClassName("group");
+        var imgur = d.getElementsByClassName("imgur");
         for (var ix = 0, len = imgur.length; ix < len; ix++) {
             imgur[ix].classList.add("ab_imgur");
         }
@@ -75,7 +85,8 @@
     function _execOekakiAbone(d) {
         var oekaki = d.querySelectorAll("a[pid]");
         for (var ix = 0, len = oekaki.length; ix < len; ix++) {
-            oekaki[ix].children[0].classList.add("ab_oekaki");
+            //oekaki[ix].children[0].classList.remove("lazy");
+            oekaki[ix].classList.add("ab_oekaki");
         }
         return;
     }
@@ -148,11 +159,13 @@
         var arr = [];
         var temp1 = list.split("\n");
         var temp2 = temp1.filter(function(elm) {
-            return elm !== ""; });
+            return elm !== "";
+        });
 
         if (isRegExp === "yes") {
             arr = temp2.map(function(elm) {
-                return new RegExp(elm); });
+                return new RegExp(elm);
+            });
         } else {
             arr = temp2.map(function(elm) {
                 var str = elm.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
@@ -177,22 +190,27 @@
         for (var ix = 0, len = target.length; ix < len; ix++) {
             t_text = target[ix].text;
             isFound.push(regexp.ngwords.some(function(elm) {
-                return elm.test(t_text); }));
+                return elm.test(t_text);
+            }));
 
             t_name = target[ix].name;
             isFound.push(regexp.ngnames.some(function(elm) {
-                return elm.test(t_name); }));
+                return elm.test(t_name);
+            }));
 
             t_mail = target[ix].mail;
             isFound.push(regexp.ngmails.some(function(elm) {
-                return elm.test(t_mail); }));
+                return elm.test(t_mail);
+            }));
 
             t_id = target[ix].id;
             isFound.push(regexp.ngids.some(function(elm) {
-                return elm.test(t_id); }));
+                return elm.test(t_id);
+            }));
 
             if (isFound.some(function(elm) {
-                    return elm; })) {
+                    return elm;
+                })) {
                 target_fix.push(ix);
             }
             isFound = [];

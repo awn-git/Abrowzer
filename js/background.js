@@ -731,7 +731,7 @@ window.bg = (function() {
 
         //note: 正規表現を使用していない場合、そのまま追加
         //note: 正規表現を使用している場合、エスケープする
-        if (_bgobj.preserve.dashboard.ngkeywordregexp === "yes") {
+        if (_bgobj.preserve.dashboard.enableRegExp_sure === "yes") {
             keyword = keyword.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
         }
 
@@ -771,6 +771,39 @@ window.bg = (function() {
         });
         return;
     }
+
+/*
+    function _extractURL(info,tab){
+        chrome.tabs.sendMessage(tab.id,{extracturl:"extracturl"},function(parm){
+            console.dir( parm );
+        });
+    }
+*/
+
+   function _extractURL(tab) {
+        chrome.tabs.query({ title: "Abrowzer::Result" }, function(query) {
+            if (query.length !== 0) {
+                chrome.tabs.update(query[0].id, { active: true });
+                alert("お手数ですがこのページは閉じてください。");
+            } else {
+                chrome.tabs.create({ url: chrome.runtime.getURL("html/result.html") }, function(tab_result) {
+                    chrome.tabs.sendMessage(tab.id,{extracturl:"extracturl"},function(parm){
+                        //note: tabs.createしてからresult.jsがlistenするのにほんの少し時間がかかるので
+                        //       2000ミリ秒ほど待機してからメッセージを送信する
+                        chrome.alarms.create("send_to_result", { when: Date.now() + 2000 });
+                        chrome.alarms.onAlarm.addListener(function(alarm) {
+                            if (alarm.name === "send_to_result") {
+                                chrome.tabs.sendMessage(tab_result.id, { extracturl: parm });
+                            }
+                        });
+                    });
+                });
+                return;
+            }
+        });
+        return;
+    }
+
 
     function _createContextMenu(obj) {
         for (var key in obj) {
@@ -820,6 +853,10 @@ window.bg = (function() {
 
             if (info.menuItemId === "download") {
                 _execDownload(tab);
+            }
+
+            if (info.menuItemId === "extracturl"){
+                _extractURL(tab);
             }
 
         });
