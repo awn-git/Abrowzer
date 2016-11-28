@@ -21,363 +21,192 @@
 
 
     /* private method*/
-    //init関数
     function _init() {
         _info = _getPageInfo();
         _assignEventHandler();
         return;
     }
 
-
-    //スレのurlや板名を取得する
     function _getPageInfo() {
-        var _url = document.querySelector("link[rel='canonical'").href;
-        var _bbsname = _url.split("/")[5];
-        var _dthreadboxlinks = document.getElementsByClassName("thread-box-links");
-        var _suretai = document.title;
+        var d = document;
+        var url = d.querySelector("link[rel='canonical'").href;
+        var bbsname = url.match(/^.*open2ch.net\/test\/read.cgi\/(.*)\/[0-9]{10}\//)[1];
+        var bbsnameJ = d.getElementsByClassName("thread-box-links")[0].children[0].innerText;
+        var suretai = d.title;
 
         return {
-            bbsname: _bbsname,
-            bbsnameJ: _dthreadboxlinks[0].childNodes[1].innerText,
-            url: _url,
-            suretai: _suretai
+            bbsname: bbsname,
+            bbsnameJ: bbsnameJ,
+            url: url,
+            suretai: suretai
         }
     }
 
-
-    //Messageに応じて処理を実行する
     function _assignEventHandler() {
         chrome.runtime.onMessage.addListener(function(parm, sender, sendResponse) {
-            if (parm.abonetype !== "no") {
-                _doNGs(parm);
+
+            if (parm.contexts.resabone === "yes") {
+                var resobj = _getResObj(document);
+                var regexpobj = _getRegExps(parm.dashboard);
+                _execResAbone(resobj, regexpobj);
             }
-            if (parm.imgurabone === "yes") {
-                _doImgurInvisible();
+
+            if (parm.contexts.imgurabone === "yes") {
+                _execImgurAbone(document);
             }
-            if (parm.oekakiabone === "yes") {
-                _doOekakiInvisible();
+
+            if (parm.contexts.oekaki === "yes") {
+                _execOekakiAbone(document);
             }
-            if (parm.imgurabone === "normal") {
-                _doImgurNormalAbone();
-            }
-            if (parm.oekakiabone === "normal") {
-                _doOekakiNormalAbone();
-            }
+
             return;
         });
         return;
     }
 
-
-    //imgur画像のみを非表示にする
-    function _doImgurInvisible() {
-        var imgur = document.getElementsByClassName("group");
-        var len = imgur.length;
-        for (var ix = 0; ix < len; ix++) {
-            imgur[ix].setAttribute("style", "display:none");
-        }
-        return;
-    }
-
-
-    //お絵描き画像のみを非表示にする
-    function _doOekakiInvisible() {
-        var _oekaki = document.querySelectorAll("a[pid]");
-        var len = _oekaki.length;
-        for (var ix = 0; ix < len; ix++) {
-            _oekaki[ix].childNodes[0].setAttribute("style", "display:none");
-        }
-        return;
-    }
-
-
-    //imgur画像の含まれるレスを通常あぼーんする
-    function _doImgurNormalAbone() {
-        var _path = _info.url;
-        _path = _path.substr(_path.indexOf("/test/"));
-        var imgur = document.querySelectorAll(".group");
-        var dd;
-        var dt;
-        var resnum;
-
+    function _execImgurAbone(d) {
+        var imgur = d.getElementsByClassName("group");
         for (var ix = 0, len = imgur.length; ix < len; ix++) {
-            if (dd = imgur[ix].parentElement) {
-                dt = dd.previousElementSibling;
-                resnum = dt.children[0].getAttribute("val") - 0;
-
-                dt.classList.add("Abrowzered");
-                dt.innerHTML = resnum + " ：" + "<font color='#1c740d'><b>あぼ〜ん</b></font>";
-                dd.innerHTML = "<span class='ank'><a rel='nofollow' target='_blank' href=" + _path + resnum + " class='anked'>[元のレス]</a></span>";
-            }
+            imgur[ix].classList.add("ab_imgur");
         }
         return;
     }
 
-
-    //お絵描き画像の含まれるレスを通常あぼーんする
-    function _doOekakiNormalAbone() {
-        var _path = _info.url;
-        _path = _path.substr(_path.indexOf("/test/"));
-        var oekaki = document.querySelectorAll("a[pid]");
-        var dd;
-        var dt;
-        var resnum;
-
+    function _execOekakiAbone(d) {
+        var oekaki = d.querySelectorAll("a[pid]");
         for (var ix = 0, len = oekaki.length; ix < len; ix++) {
-            if (dd = oekaki[ix].parentElement) {
-                dt = dd.previousSibling;
-                resnum = oekaki[ix].getAttribute("resnum");
-
-                dt.classList.add("Abrowzered");
-                dt.innerHTML = resnum + " ：" + "<font color='#1c740d'><b>あぼ〜ん</b></font>";
-                dd.innerHTML = "<span class='ank'><a rel='nofollow' target='_blank' href=" + _path + resnum + " class='anked'>[元のレス]</a></span>";
-            }
+            oekaki[ix].children[0].classList.add("ab_oekaki");
         }
         return;
     }
 
-    
-    //NGキーワードに基づくNG処理を実行する
-    function _doNGs(nglist) {
-        /* 処理概要
-            -スレ内のtext,name,mail,idを取得し
-            -NGキーワードを正規表現に直し
-            -それを適用し
-            -DOMに注入する
-        */
+    function _getResObj(d) {
+        var obj = {
+            dt: d.querySelectorAll("div.thread  dt"),
+            dd: d.querySelectorAll("div.thread  dd"),
+            res: []
+        };
+        obj.res = _parseThread(obj.dt, obj.dd);
+        return obj;
+    }
 
-        var Op2SureObj = _extractDx();
-        var output = _generateRegs();
-        var _path = _info.url;
+    function _parseThread(dt, dd) {
+        var arr = [];
+        var parse_dt = _parseDT(dt);
+        var parse_dd = _parseDD(dd);
 
-        _execAbone();
-
-        /* 関数 */
-        function _extractDx() {
-            /* private member */
-            var _dl = []; //_dl = _dt + _dd
-            var _dt = []; //_dtはレス番号、名前欄、日付欄、メール欄、IDが格納されている
-            var _dd = []; //_ddは本文が格納されている
-            var _res = []; //プリミティブな感じで上記の内容を格納
-
-            //一時変数
-            var _dthread;
-            var _dttemp;
-            var _mailtemp;
-            var _dllength;
-
-            //resに格納する情報
-            var _num;
-            var _name;
-            var _mail;
-            var _id;
-            var _text;
-
-
-            //dl要素を取得する
-            _dthread = document.querySelector(".thread");
-            _dl = _dthread.getElementsByTagName("dl");
-
-            //_data.resに格納する範囲を更新する
-            _dllen = _dl.length;
-
-            //dlをdtとddに分解する
-            var _dttemplen;
-            var _dttemp;
-            var _ddtemp;
-            for (var ix = 0; ix < _dllen; ix++) {
-                _dttemp = _dl[ix].getElementsByTagName("dt");
-                _ddtemp = _dl[ix].getElementsByTagName("dd");
-                _dttemplen = _dttemp.length;
-
-                for (var ixx = 0; ixx < _dttemplen; ixx++) {
-                    if (_dttemp[ixx].className.indexOf("Abrowzered") === -1) {
-                        _dt.push(_dttemp[ixx]);
-                        _dd.push(_ddtemp[ixx]);
-                    }
-                }
-            }
-
-
-            //_dt,_ddの各要素毎にレス情報を取得する
-            var _dtlen = _dt.length;
-            for (var ix = 0; ix < _dtlen; ix++) {
-                /* _dt に関する処理 */
-                //テキスト(レス内容)取得処理
-                //aresに隠されている"例の文字列"を消す
-                _text = (function(str) {
-                    var mlen = /\n  [0-9].*件/.exec(str);
-                    mlen = mlen !== null ? -1 - mlen[0].length : -1;
-                    return str.slice(0, mlen);
-                })(_dd[ix].innerText);
-
-                /* _dd に関する処理 */
-                //メール欄取得処理
-                _mailtemp = _dt[ix].querySelector("font > a") || _dt[ix].querySelectorAll("a")[1];
-                _mail = _mailtemp === null || _mailtemp === undefined ? undefined : _mailtemp.getAttribute("href").split(":")[1];
-
-
-                //レス番号、名前欄、日付欄、ID取得処理
-                _dttemp = _dt[ix].innerText.split("：");
-                _num = _dttemp[0].match(/[0-9]*/)[0] - 0;
-                _name = _dttemp[1].substr(_dttemp[1].length - 1) === " " ? _dttemp[1].substr(0, _dttemp[1].length - 1) : _dttemp[1];
-                _id = _dttemp[2].split(" ID:")[1].split(" ")[0];
-
-
-                //オブジェクトに格納する
-                _res.push({
-                    num: _num,
-                    name: _name,
-                    mail: _mail,
-                    id: _id,
-                    text: _text
-                });
-            }
-
-            return {
-                dt: _dt,
-                dd: _dd,
-                res: _res
-            };
-        }
-
-
-        function _generateRegs() {
-            //レス数
-            var len = Op2SureObj.res.length;
-            var output = [];
-
-            //NGキーワードを改行で区切って文字列から配列にする
-            var ngwords = nglist.ngwords !== "" ? nglist.ngwords.split("\n") : undefined;
-            var ngnames = nglist.ngnames !== "" ? nglist.ngnames.split("\n") : undefined;
-            var ngmails = nglist.ngmails !== "" ? nglist.ngmails.split("\n") : undefined;
-            var ngids = nglist.ngids !== "" ? nglist.ngids.split("\n") : undefined;
-
-            //NGキーワードを正規表現化してtext|name|mail|idのそれぞれの要素に適用する
-            if(nglist.ngkeywordregexp === "yes"){
-                output = output.concat(_detectNG(ngwords, "text",_generateReg));
-                output = output.concat(_detectNG(ngnames, "name",_generateReg));
-                output = output.concat(_detectNG(ngmails, "mail",_generateReg));
-                output = output.concat(_detectNG(ngids, "id",_generateReg));                
-            }else{
-                output = output.concat(_detectNG(ngwords, "text",_escapeRegExp));
-                output = output.concat(_detectNG(ngnames, "name",_escapeRegExp));
-                output = output.concat(_detectNG(ngmails, "mail",_escapeRegExp));
-                output = output.concat(_detectNG(ngids, "id",_escapeRegExp));                
-            }
-
-            //重複除去処理
-            output = output.filter(function(elm, ind, arr) {
-                return arr.indexOf(elm) === ind;
+        for (var ix = 0, len = parse_dt.length; ix < len; ix++) {
+            arr.push({
+                name: parse_dt[ix].name,
+                mail: parse_dt[ix].mail,
+                id: parse_dt[ix].id,
+                text: parse_dd[ix]
             });
+        }
+        return arr;
+    }
+
+    function _parseDT(dt) {
+        var arr = [];
+        var temp1;
+        var temp2;
+        var dt_regexp1 = new RegExp(/^[0-9]{1,4} ：(.*?) ?：.* ID:(.*$)/);
+        var dt_regexp2 = new RegExp(/<a href="mailto:(.*?)">/);
+        for (var ix = 0, len = dt.length; ix < len; ix++) {
+            temp1 = dt[ix].innerText.match(dt_regexp1);
+            temp2 = dt[ix].outerHTML.match(dt_regexp2);
+            arr.push({
+                name: temp1[1],
+                id: temp1[2].replace("(主)", "").replace(" ", "").replace("×", ""),
+                mail: temp2 === null ? null : temp2[1]
+            });
+        }
+        return arr;
+    }
+
+    function _parseDD(dd) {
+        var arr = [];
+        var dd_regexp = new RegExp(/  [0-9]*件.*\n$/);
+        for (var ix = 0, len = dd.length; ix < len; ix++) {
+            arr.push(dd[ix].innerText.replace(dd_regexp, ""));
+        }
+        return arr;
+    }
+
+    function _getRegExps(lists) {
+        var isRegExp = lists.enableRegExp_sure;
+        var obj = {
+            ngids: _generateRegExp(lists.ngids, isRegExp),
+            ngmails: _generateRegExp(lists.ngmails, isRegExp),
+            ngnames: _generateRegExp(lists.ngnames, isRegExp),
+            ngwords: _generateRegExp(lists.ngwords, isRegExp)
+        };
+        return obj;
+    }
+
+    function _generateRegExp(list, isRegExp) {
+        var arr = [];
+        var temp1 = list.split("\n");
+        var temp2 = temp1.filter(function(elm) {
+            return elm !== ""; });
+
+        if (isRegExp === "yes") {
+            arr = temp2.map(function(elm) {
+                return new RegExp(elm); });
+        } else {
+            arr = temp2.map(function(elm) {
+                var str = elm.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
+                return new RegExp(str);
+            });
+        }
+        return arr;
+    }
+
+    function _execResAbone(resobj, regexp) {
+        var target = resobj.res;
+        var target_fix = [];
+
+        var t_name;
+        var t_mail;
+        var t_id;
+        var t_text;
+
+        var isFound = [];
 
 
-            //NGキーワードを正規表現にする関数
-            function _generateReg(list) {
-                return list.map(function(elm) {
-                    return new RegExp(elm);
-                });
+        for (var ix = 0, len = target.length; ix < len; ix++) {
+            t_text = target[ix].text;
+            isFound.push(regexp.ngwords.some(function(elm) {
+                return elm.test(t_text); }));
+
+            t_name = target[ix].name;
+            isFound.push(regexp.ngnames.some(function(elm) {
+                return elm.test(t_name); }));
+
+            t_mail = target[ix].mail;
+            isFound.push(regexp.ngmails.some(function(elm) {
+                return elm.test(t_mail); }));
+
+            t_id = target[ix].id;
+            isFound.push(regexp.ngids.some(function(elm) {
+                return elm.test(t_id); }));
+
+            if (isFound.some(function(elm) {
+                    return elm; })) {
+                target_fix.push(ix);
             }
-
-            //NGキーワードに含まれる正規表現をエスケープする関数
-            function _escapeRegExp(list) {
-                 return list.map(function(elm){
-                    var str = elm.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
-                    return new RegExp(str);
-                });
-            }
-
-            //空文字列除去関数
-            function _removeEmptyString(list) {
-                return list.filter(function(elm) {
-                    return elm !== "";
-                });
-            }
-
-            //NGキーワードを正規表現化orエスケープしてtext|name|mail|idのそれぞれの要素に適用する関数
-            function _detectNG(ngkeywords, type, func) {
-                if (ngkeywords) {
-                    var ngcheck;
-                    var ngregs = _removeEmptyString(ngkeywords);
-                    ngregs = func(ngregs);
-                    ngcheck = Op2SureObj.res.map(function(elm, ind) {
-                        return ngregs.some(function(inelm) {
-                            return inelm.test(elm[type]);
-                        }) && ind;
-                    });
-                    ngcheck = ngcheck.filter(function(elm) {
-                        return elm !== false;
-                    });
-                    return ngcheck;
-                } else {
-                    return [];
-                }
-            }
-
-            return output;
+            isFound = [];
         }
 
-
-        function _execAbone() {
-            //あぼーんタイプを判定してあぼーんを実行する
-            switch (nglist.abonetype) {
-                case "normal":
-                    var resnumber;
-                    _path = _path.substr(_path.indexOf("/test/")); // urlの"/test/"以降の文字列を抽出
-                    _aboneLooper(_doNormalAbone);
-                    break;
-
-                case "res":
-                    _aboneLooper(_doResAbone);
-                    break;
-
-                case "toumei":
-                    _aboneLooper(_doToumeiAbone);
-                    break;
-
-                default:
-            }
-
-
-            function _aboneLooper(func) {
-                for (var ix = output.length - 1; ix > -1; ix = ix - 1) {
-                    func(output[ix]);
-                }
-                return;
-            }
-
-            //通常あぼーん
-            function _doNormalAbone(num) {
-                resnumber = Op2SureObj.res[num].num;
-                Op2SureObj.dt[num].classList.add("Abrowzered");
-                Op2SureObj.dt[num].innerHTML = resnumber + " ：" + "<font color='#1c740d'><b>あぼ〜ん</b></font>";
-                Op2SureObj.dd[num].innerHTML = "<span class='ank'><a rel='nofollow' target='_blank' href=" + _path + resnumber + " class='anked'>[元のレス]</a></span>";
-                return;
-            }
-
-            //レスあぼーん
-            function _doResAbone(num) {
-                var ab_none = "display:none";
-                Op2SureObj.dt[num].classList.add("Abrowzered");
-                Op2SureObj.dd[num].setAttribute("style", ab_none);
-                return;
-            }
-
-            //透明あぼーん
-            function _doToumeiAbone(num) {
-                var ab_hidden = "display:none";
-                Op2SureObj.dt[num].classList.add("Abrowzered");
-                Op2SureObj.dt[num].setAttribute("style", ab_hidden);
-                Op2SureObj.dd[num].setAttribute("style", ab_hidden);
-                return;
-            }
-
-            return;
+        var ind;
+        for (var ix = 0, len = target_fix.length; ix < len; ix++) {
+            ind = target_fix[ix];
+            resobj.dd[ind].classList.add("ab_ngres");
+            resobj.dt[ind].classList.add("ab_ngres");
         }
 
         return;
     }
-
 
     return _info;
 })();

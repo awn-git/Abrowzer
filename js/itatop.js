@@ -12,131 +12,168 @@
 
 
 (function() {
-    //member
+    //private member
     var _info = {};
-    var _sures;
-    var _topThreads;
-    var _suretaiaboned;
 
 
-    //init
+    //initializer
     _init();
 
 
-    //method
+    //private method
     function _init() {
         _info = _getPageInfo();
-        _topThreads = document.getElementById("topThreads").children[0];
-        _sures = _trimThreads();
+        _suretaiobj = _getSuretaiObj(document);
         _assignEventHandler();
         return;
     }
 
-
     function _getPageInfo() {
-        var _url = location.href;
-        var _bbsname = location.pathname.split("/")[1];
-        var _bbsnameJ = document.getElementsByTagName("h1")[0].innerText.split("＠")[0];
+        var d = document;
+        var url = "http://" + location.host + location.pathname;
+        var bbsname = location.pathname.match("\/(.*?)\/")[1];
+        var bbsname_temp = d.getElementsByTagName("h1")[0].innerText;
+        var bbsnameJ = bbsname_temp.substr(0, bbsname_temp.lastIndexOf("＠おーぷん２ちゃんねる"));
 
         return {
-            url: _url,
-            bbsname: _bbsname,
-            bbsnameJ: _bbsnameJ
+            url: url,
+            bbsname: bbsname,
+            bbsnameJ: bbsnameJ
         }
     }
-
 
     function _assignEventHandler() {
         chrome.runtime.onMessage.addListener(function(parm, sender, sendResponse) {
+            var regexp_arr;
+            var itatop_content;
 
-            if (parm.suretaiabone === "yes") {
-                _suretaiaboned = _doSuretaiAbone(parm.ngsuretai, parm.ngsuretairegexp);
+            if (parm.contexts.suretaiabone === "yes") {
+                regexp_arr = _getRegExps(parm.dashboard.ngsuretai, parm.dashboard.enableRegExp_suretai);
+                itatop_content = _execSuretaiAbone(_suretaiobj, regexp_arr);
             } else {
-                _suretaiaboned = _sures;
+                itatop_content = _generateContent(_suretaiobj, _info);
             }
 
-            _replaceTopThreads();
+            _replaceItatopPage(document, itatop_content);
+
         });
         return;
     }
 
-
-    function _replaceTopThreads() {
-        var str;
-        var output = _suretaiaboned.map(function(elm) {
-            str = "<a href='" + elm.url + "'target='body'><t>" + elm.order + elm.suretai + "</t>" + elm.resamount + "</a>";
-            return str;
-        });
-        _topThreads.innerHTML = output.join("");
-        return;
+    function _getSuretaiObj(d) {
+        var arr = [];
+        var suretais = d.querySelectorAll("td#topThreads > font > a");
+        arr_temp = _parseSuretai(suretais);
+        arr = _addSuretate(arr_temp);
+        return arr;
     }
 
+    function _parseSuretai(obj) {
+        var arr = [];
 
-    function _trimThreads() {
-        var d = _topThreads.children;
-        var output = [];
-
-        for (var ix = 0, len = d.length; ix < len; ix++) {
+        for (var ix = 0, len = obj.length; ix < len; ix++) {
             if (ix < 18 && ix % 2 === 0) {
-                output.push({
-                    order : d[ix].childNodes[0].textContent,
-                    suretai: d[ix + 1].childNodes[0].innerText,
-                    resamount: d[ix + 1].childNodes[1].textContent,
-                    url: d[ix].getAttribute("href")
+                arr.push({
+                    suretai: obj[ix + 1].childNodes[0].textContent,
+                    resamount: obj[ix + 1].childNodes[1].textContent.replace(/[() ]/g, "") - 0,
+                    url: obj[ix].href,
+                    suretate: null
                 });
             } else if (ix >= 18) {
-                output.push({
-                    order : d[ix].childNodes[0].textContent,
-                    suretai: d[ix].childNodes[1].innerText,
-                    resamount:d[ix].childNodes[2].textContent,
-                    url: d[ix].getAttribute("href")
+                arr.push({
+                    suretai: obj[ix].childNodes[1].textContent,
+                    resamount: obj[ix].childNodes[2].textContent.replace(/[() ]/g, "") - 0,
+                    url: obj[ix].href,
+                    suretate: null
                 });
             }
         }
-        return output;
+        return arr;
     }
 
+    function _addSuretate(obj) {
+        for (var ix = 0, len = obj.length; ix < len; ix++) {
+            obj[ix].suretate = _getSuretateDate(obj[ix].url.match(/[0-9]{10}/) - 0);
+        }
+        return obj;
+    }
 
     function _getSuretateDate(input) {
-        //surekeyをスレ立て日時に変換する
         var timestamp = input * 1000;
         var p = new Date(timestamp);
         var rtn = p.getFullYear() + "/" + ("0" + (p.getMonth() + 1)).substr(-2, 2) + "/" + ("0" + p.getDate()).substr(-2, 2) + " " + ("0" + p.getHours()).substr(-2, 2) + ":" + ("0" + p.getMinutes()).substr(-2, 2) + ":" + ("0" + p.getSeconds()).substr(-2, 2);
         return rtn;
     }
 
+    function _getRegExps(list, isRegExp) {
+        var arr = [];
+        var temp1 = list.split("\n");
+        var temp2 = temp1.filter(function(elm) {
+            return elm !== ""; });
 
-    function _doSuretaiAbone(list,isRegExp) {
-        //改行で分割 -> 配列
-        nglist = list.split("\n");
-
-        //空白除去
-        nglist = nglist.filter(function(elm) {
-            return elm !== "";
-        });
-
-        //正規表現化
         if (isRegExp === "yes") {
-            var ngregs = nglist.map(function(elm) {
-                return new RegExp(elm);
-            });
-
+            arr = temp2.map(function(elm) {
+                return new RegExp(elm); });
         } else {
-            var ngregs = nglist.map(function(elm) {
+            arr = temp2.map(function(elm) {
                 var str = elm.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
                 return new RegExp(str);
             });
         }
-
-        //正規表現を適用する
-        var output = _sures.filter(function(elm) {
-            return !ngregs.some(function(inelm) {
-                return inelm.test(elm.suretai);
-            });
-        });
-
-        return output;
+        return arr;
     }
 
+    function _execSuretaiAbone(obj, regexp) {
+        var target_list = [];
+        var new_topThreads = [];
+        var str;
+        var extra;
+
+        for (var ix = 0, len = obj.length; ix < len; ix++) {
+            if (regexp.some(function(elm) {
+                    return elm.test(obj[ix].suretai); })) {
+                target_list.push(ix);
+            }
+        }
+
+        for (var ix = 0, len = obj.length; ix < len; ix++) {
+            extra = target_list.indexOf(ix) > -1 ? "class='ab_ngsuretai'" : "";
+            str = "<a href='" + obj[ix].url + "' " + extra + ">";
+            str += "<span class='ab_order'>" + (ix + 1) + "</span>";
+            str += "<span class='ab_suretate'>" + obj[ix].suretate + "</span>";
+            str += "<t>" + obj[ix].suretai + "</t>";
+            str += "<span class='ab_resamount'>" + obj[ix].resamount + "</span>";
+            str += "</a>";
+
+            new_topThreads.push(str);
+        }
+
+        return new_topThreads.join("");
+    }
+
+    function _generateContent(arr, info) {
+        var arrmap = [];
+        var str;
+        var host = location.host;
+        arrmap = arr.map(function(elm, ind) {
+            str = "<a href='" + host + "/test/read.cgi/" + info.bbsname + "/" + elm.key + "/l50'>";
+            str += "<span class='ab_order'>" + (ind + 1) + "</span>";
+            str += "<span class='ab_suretate'>" + elm.suretate + "</span>";
+            str += elm.suretai;
+            str += "<span class='ab_resamount'>" + elm.resamount + "</span></a>";
+
+            return str;
+        });
+
+        return arrmap.join("");
+    }
+
+    function _replaceItatopPage(d, content) {
+        var topThreads = d.querySelector("td#topThreads > font");
+        topThreads.innerHTML = content;
+    }
+
+
+    //public api
     return _info;
 })();

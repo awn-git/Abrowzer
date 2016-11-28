@@ -25,22 +25,32 @@ window.bg = (function() {
                 ita: []
             },
             dashboard: {},
-            mode: null
+            contexts: {
+                mode: null,
+                resabone: null,
+                imgurabone: null,
+                oekakiabone: null,
+                suretaiabone: null
+            }
         }
     };
 
     var _defaultconfigs = {
-        abonetype: "no",
-        imgurabone: "no",
-        oekakiabone: "no",
         ngwords: "",
         ngnames: "",
         ngmails: "",
         ngids: "",
-        suretaiabone: "no",
         ngsuretai: "",
-        ngkeywordregexp: "no",
-        ngsuretairegexp: "no"
+        enableRegExp_sure: "no",
+        enableRegExp_suretai: "no"
+    };
+
+    var _defaultcontexts = {
+        mode: "normalmode",
+        resabone: "no",
+        imgurabone: "no",
+        oekakiabone: "no",
+        suretaiabone: "no"
     };
 
     var _conmenu = {};
@@ -70,6 +80,41 @@ window.bg = (function() {
         type: "radio",
         id: "simplemode",
         parentId: "mode"
+    };
+
+    _conmenu.ngsettings = {
+        title: "NG適用",
+        type: "normal",
+        id: "ngsettings",
+        parentId: "abrowzer"
+    };
+
+    _conmenu.resabone = {
+        title: "レスあぼーん",
+        type: "checkbox",
+        id: "resabone",
+        parentId: "ngsettings"
+    };
+
+    _conmenu.imgurabone = {
+        title: "imgurあぼーん",
+        type: "checkbox",
+        id: "imgurabone",
+        parentId: "ngsettings"
+    };
+
+    _conmenu.oekakiabone = {
+        title: "お絵描きあぼーん",
+        type: "checkbox",
+        id: "oekakiabone",
+        parentId: "ngsettings"
+    };
+
+    _conmenu.suretaiabone = {
+        title: "スレタイあぼーん",
+        type: "checkbox",
+        id: "suretaiabone",
+        parentId: "ngsettings"
     };
 
     _conmenu.bbsmenu = {
@@ -184,7 +229,7 @@ window.bg = (function() {
 
     function _assignEventHandler() {
         _evaluateMessage();
-        _doNGingInSure();
+        _execNGinSure();
         _openDashboard();
         _assignContextMenuLister();
         _assignBeforeRq();
@@ -197,7 +242,7 @@ window.bg = (function() {
                 _bgobj = obj;
             } else {
                 _bgobj.preserve.dashboard = _defaultconfigs;
-                _bgobj.preserve.mode = "normalmode";
+                _bgobj.preserve.contexts = _defaultcontexts;
                 _saveLocalStorage(_bgobj);
             }
             return;
@@ -248,9 +293,25 @@ window.bg = (function() {
             }
         }
 
-        //モードの切り替え
-        if (_bgobj.preserve.mode === "simplemode") {
+        //note: 閲覧モードとNGSettingsのチェックを表示する
+        if (_bgobj.preserve.contexts.mode === "simplemode") {
             chrome.contextMenus.update("simplemode", { checked: true });
+        }
+
+        if (_bgobj.preserve.contexts.resabone === "yes") {
+            chrome.contextMenus.update("resabone", { checked: true });
+        }
+
+        if (_bgobj.preserve.contexts.imgurabone === "yes") {
+            chrome.contextMenus.update("imgurabone", { checked: true });
+        }
+
+        if (_bgobj.preserve.contexts.oekakiabone === "yes") {
+            chrome.contextMenus.update("oekakiabone", { checked: true });
+        }
+
+        if (_bgobj.preserve.contexts.suretaiabone === "yes") {
+            chrome.contextMenus.update("suretaiabone", { checked: true });
         }
 
         //note: 板登録
@@ -360,28 +421,29 @@ window.bg = (function() {
         return;
     }
 
-    function _injectSure(parm, sender) {
-        chrome.tabs.executeScript(sender.tab.id, { file: "js/sure.js" }, function(response) {
-            _bgobj.temporary = response[0];
-            _storeHistory("sure", _bgobj.temporary);
-            chrome.tabs.sendMessage(sender.tab.id, _bgobj.preserve.dashboard, function() {});
+    function _injectSubback(parm, sender) {
+        chrome.tabs.executeScript(sender.tab.id, { file: "js/subback.js" }, function(response) {
+            chrome.tabs.insertCSS(sender.tab.id, { file: "css/subback.css" });
+
+            var message = {
+                dashboard: _bgobj.preserve.dashboard,
+                contexts: _bgobj.preserve.contexts
+            };
+            chrome.tabs.sendMessage(sender.tab.id, message, function() {});
             return;
         });
         return;
     }
 
-    function _doNGingInSure() {
-        chrome.webRequest.onCompleted.addListener(function(response) {
-            chrome.tabs.sendMessage(response.tabId, _bgobj.preserve.dashboard, function() {});
-            return;
-        }, { urls: ["http://*.open2ch.net/ajax/get_res*"] });
-        return;
-    }
+    function _injectSubject(parm, sender) {
+        chrome.tabs.executeScript(sender.tab.id, { file: "js/subject.js" }, function(response) {
+            chrome.tabs.insertCSS(sender.tab.id, { file: "css/subject.css" });
 
-    function _injectSubback(parm, sender) {
-        chrome.tabs.executeScript(sender.tab.id, { file: "js/subback.js" }, function(response) {
-            chrome.tabs.insertCSS(sender.tab.id, { file: "css/subback.css" });
-            chrome.tabs.sendMessage(sender.tab.id, _bgobj.preserve.dashboard, function() {});
+            var message = {
+                dashboard: _bgobj.preserve.dashboard,
+                contexts: _bgobj.preserve.contexts
+            };
+            chrome.tabs.sendMessage(sender.tab.id, message, function() {});
             return;
         });
         return;
@@ -390,17 +452,60 @@ window.bg = (function() {
     function _injectItatop(parm, sender) {
         chrome.tabs.executeScript(sender.tab.id, { file: "js/itatop.js" }, function(response) {
             chrome.tabs.insertCSS(sender.tab.id, { file: "css/itatop.css" });
+            console.dir( response[0] );
             _bgobj.temporary = response[0];
             _storeHistory("ita", _bgobj.temporary);
-            chrome.tabs.sendMessage(sender.tab.id, _bgobj.preserve.dashboard, function() {});
+
+            var message = {
+                dashboard: _bgobj.preserve.dashboard,
+                contexts: _bgobj.preserve.contexts
+            };
+            chrome.tabs.sendMessage(sender.tab.id, message, function() {});
             return;
         });
         return;
     }
 
+    function _injectSure(parm, sender) {
+        var bbsname = sender.url.match(/^.*open2ch.net\/test\/read.cgi\/(.*)\/[0-9]{10}\//)[1];
+        var user_css = "css/user/sure/" + bbsname + ".css";
+
+        chrome.tabs.executeScript(sender.tab.id, { file: "js/sure.js" }, function(response) {
+            chrome.tabs.insertCSS(sender.tab.id, { file: user_css }, function(parm) {
+                if (chrome.runtime.lastError) {
+                    console.log("insert css/sure.css because " + user_css + " was not found.");
+                    chrome.tabs.insertCSS(sender.tab.id, { file: "css/sure.css" });
+                }
+            });
+
+            _bgobj.temporary = response[0];
+            _storeHistory("sure", _bgobj.temporary);
+            var message = {
+                dashboard: _bgobj.preserve.dashboard,
+                contexts: _bgobj.preserve.contexts
+            };
+            chrome.tabs.sendMessage(sender.tab.id, message, function() {});
+            return;
+        });
+        return;
+    }
+
+    function _execNGinSure() {
+        chrome.webRequest.onCompleted.addListener(function(response) {
+            var message = {
+                dashboard: _bgobj.preserve.dashboard,
+                contexts: _bgobj.preserve.contexts
+            };
+            chrome.tabs.sendMessage(response.tabId, message, function() {});
+            return;
+        }, { urls: ["http://*.open2ch.net/ajax/get_res*"] });
+        return;
+    }
+
+
     function _injectDat(parm, sender) {
         var bbsname = sender.url.match(/^.*open2ch.net\/(.*?)\/dat\/[0-9]{10}.dat/)[1];
-        var user_css = "css/" + bbsname + ".css";
+        var user_css = "css/user/dat/" + bbsname + ".css";
 
         chrome.tabs.executeScript(sender.tab.id, { file: "js/dat.js" }, function(response) {
             chrome.tabs.insertCSS(sender.tab.id, { file: user_css }, function(parm) {
@@ -424,10 +529,15 @@ window.bg = (function() {
                 }
                 _storeHistory("sure", _bgobj.temporary);
             });
+
+            var message = {
+                dashboard: _bgobj.preserve.dashboard,
+                contexts: _bgobj.preserve.contexts
+            };
+            chrome.tabs.sendMessage(sender.tab.id, message, function() {});
         });
         return;
     }
-
 
     function _getLocalJSON(filename, callback) {
         var url = chrome.extension.getURL(filename);
@@ -444,11 +554,8 @@ window.bg = (function() {
         return;
     }
 
-    function _injectSubject(parm, sender) {
-        chrome.tabs.executeScript(sender.tab.id, { file: "js/subject.js" }, function(response) {
-            chrome.tabs.insertCSS(sender.tab.id, { file: "css/subject.css" });
-            return;
-        });
+    function _injectImagelist(parm, sender) {
+        chrome.tabs.executeScript(sender.tab.id, { file: "js/image.js" }, function() {});
         return;
     }
 
@@ -457,11 +564,6 @@ window.bg = (function() {
             chrome.tabs.insertCSS(sender.tab.id, { file: "css/bbsmenu.css" });
             return;
         });
-        return;
-    }
-
-    function _injectImagelist(parm, sender) {
-        chrome.tabs.executeScript(sender.tab.id, { file: "js/image.js" }, function() {});
         return;
     }
 
@@ -480,14 +582,6 @@ window.bg = (function() {
                 _saveLocalStorage(_bgobj);
             }
         }
-        return;
-    }
-
-    function _injectMenu(parm, sender) {
-        chrome.tabs.executeScript(sender.tab.id, { file: "js/menu.js" }, function(response) {
-            chrome.tabs.sendMessage(sender.tab.id, _bgobj.preserve.dashboard, function() {});
-            return;
-        });
         return;
     }
 
@@ -588,9 +682,17 @@ window.bg = (function() {
         return;
     }
 
-    function _switchCurrentMode(selected) {
-        _bgobj.preserve.mode = selected;
+    function _switchCurrentMode(selected, tabid) {
+        _bgobj.preserve.contexts.mode = selected;
         _saveLocalStorage(_bgobj);
+        chrome.tabs.reload(tabid);
+        return;
+    }
+
+    function _applyNGsettings(type, checked, tabid) {
+        _bgobj.preserve.contexts[type] = checked ? "yes" : "no";
+        _saveLocalStorage(_bgobj);
+        chrome.tabs.reload(tabid);
         return;
     }
 
@@ -709,7 +811,11 @@ window.bg = (function() {
             }
 
             if (info.parentMenuItemId === "mode") {
-                _switchCurrentMode(info.menuItemId);
+                _switchCurrentMode(info.menuItemId, tab.id);
+            }
+
+            if (info.parentMenuItemId === "ngsettings") {
+                _applyNGsettings(info.menuItemId, info.checked, tab.id);
             }
 
             if (info.menuItemId === "download") {
@@ -725,7 +831,7 @@ window.bg = (function() {
             var urltemp = parm.url.match(/(^.*\/)test\/read\.cgi\/(.*)\/([0-9]{10})/);;
             var url = urltemp[1] + urltemp[2] + "/dat/" + urltemp[3] + ".dat";
 
-            if (_bgobj.preserve.mode === "simplemode") {
+            if (_bgobj.preserve.contexts.mode === "simplemode") {
                 return { redirectUrl: url };
             }
         }, { urls: ["http://*.open2ch.net/test/read.cgi/*"] }, ["blocking"]);

@@ -12,127 +12,181 @@
 
 
 (function() {
-    //member
+    //private member
     var _info = {};
-    var _sures;
-    var _suretaiaboned;
+    var _suretaiobj;
+    var _header;
 
-    //init
+
+    //initializer
     _init();
 
-    //method
+
+    //private method
     function _init() {
         _info = _getPageInfo();
+        _suretaiobj = _getSuretaiObj(document);
+        _header = _generateHeaderHTML(_info);
         _assignEventHandler();
-        _sures = _trimThreads();
-        return;
-    }
-
-    function _assignEventHandler() {
-        chrome.runtime.onMessage.addListener(function(parm, sender, sendResponse) {
-
-            if (parm.suretaiabone === "yes") {
-                _suretaiaboned = _doSuretaiAbone(parm.ngsuretai, parm.ngsuretairegexp);
-            } else {
-                _suretaiaboned = _sures;
-            }
-            _addLinks();
-            _replaceTopThreads();
-
-        });
         return;
     }
 
     function _getPageInfo() {
-        var _url = location.href;
-        var _bbsname = location.pathname.split("/")[1];
-        var _bbsnameJ = document.title.split("＠")[0];
+        var d = document;
+        var url = location.href;
+        var bbsname = location.pathname.match("\/(.*?)\/")[1];
+        var bbsname_temp = d.title;
+        var bbsnameJ = bbsname_temp.substr(0, bbsname_temp.lastIndexOf("＠スレッド一覧"));
 
         return {
-            url: _url,
-            bbsname: _bbsname,
-            bbsnameJ: _bbsnameJ
+            url: url,
+            bbsname: bbsname,
+            bbsnameJ: bbsnameJ
         }
     }
 
-    function _trimThreads() {
-        var d = document.querySelectorAll("a");
-        var output = [];
-        var temp;
-        for (var ix = 0, len = d.length; ix < len; ix++) {
-            temp = d[ix].innerText;
-            output.push({
-                order: temp.match(/^[0-9].*: /)[0],
-                suretai: temp.match(/^.*: (.*) \([0-9].*\)$/) === null ? "" : temp.match(/^.*: (.*) \([0-9].*\)$/)[1],
-                resamount: temp.match(/ \([0-9].*\)$/)[0],
-                url: d[ix].getAttribute("href")
+    function _assignEventHandler() {
+        chrome.runtime.onMessage.addListener(function(parm, sender, sendResponse) {
+            var regexp_arr;
+            var subback_content;
+
+            if (parm.contexts.suretaiabone === "yes") {
+                regexp_arr = _getRegExps(parm.dashboard.ngsuretai, parm.dashboard.enableRegExp_suretai);
+                subback_content = _execSuretaiAbone(_suretaiobj, regexp_arr, _info);
+            } else {
+                subback_content = _generateContent(_suretaiobj, _info);
+            }
+
+            _replaceSubbackPage(document, _header, subback_content);
+            return;
+        });
+        return;
+    }
+
+    function _getSuretaiObj(d) {
+        var arr = [];
+        var suretais = d.querySelectorAll("small#trad > a");
+        var arr_temp = _parseSuretai(suretais);
+        arr = _addSuretate(arr_temp);
+        return arr;
+    }
+
+    function _parseSuretai(obj) {
+        var arr = [];
+        var str;
+        for (var ix = 0, len = obj.length; ix < len; ix++) {
+            str = obj[ix].innerText.match(/^[0-9]{1,4}: (.*) \(([0-9]{1,4})\)$/);
+            arr.push({
+                suretai: str[1],
+                resamount: str[2] - 0,
+                key: obj[ix].href.match(/[0-9]{10}/) - 0,
+                suretate: null
             });
         }
-        return output;
+        return arr;
     }
 
-    function _doSuretaiAbone(list, isRegExp) {
-        //改行で分割 -> 配列
-        nglist = list.split("\n");
+    function _addSuretate(obj) {
+        for (var ix = 0, len = obj.length; ix < len; ix++) {
+            obj[ix].suretate = _getSuretateDate(obj[ix].key - 0);
+        }
+        return obj;
+    }
 
-        //空白除去
-        nglist = nglist.filter(function(elm) {
+    function _getSuretateDate(input) {
+        var timestamp = input * 1000;
+        var p = new Date(timestamp);
+        var rtn = p.getFullYear() + "/" + ("0" + (p.getMonth() + 1)).substr(-2, 2) + "/" + ("0" + p.getDate()).substr(-2, 2) + " " + ("0" + p.getHours()).substr(-2, 2) + ":" + ("0" + p.getMinutes()).substr(-2, 2) + ":" + ("0" + p.getSeconds()).substr(-2, 2);
+        return rtn;
+    }
+
+    function _getRegExps(list, isRegExp) {
+        var arr = [];
+        var temp1 = list.split("\n");
+        var temp2 = temp1.filter(function(elm) {
             return elm !== "";
         });
 
-        //正規表現化
         if (isRegExp === "yes") {
-            var ngregs = nglist.map(function(elm) {
+            arr = temp2.map(function(elm) {
                 return new RegExp(elm);
             });
-
         } else {
-            var ngregs = nglist.map(function(elm) {
+            arr = temp2.map(function(elm) {
                 var str = elm.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
                 return new RegExp(str);
             });
         }
-
-        //正規表現を適用する
-        var output = _sures.filter(function(elm) {
-            return !ngregs.some(function(inelm) {
-                return inelm.test(elm.suretai);
-            });
-        });
-
-        return output;
+        return arr;
     }
 
-    function _replaceTopThreads() {
+    function _execSuretaiAbone(obj, regexp, info) {
+        var target_list = [];
+        var new_sures = [];
         var str;
-        var output = _suretaiaboned.map(function(elm) {
-            str = "<a href='" + elm.url + "'target='body'><t>" + elm.order + elm.suretai + "</t>" + elm.resamount + "</a>";
+        var extra;
+        var host = location.host;
+
+        for (var ix = 0, len = obj.length; ix < len; ix++) {
+            if (regexp.some(function(elm) {
+                    return elm.test(obj[ix].suretai);
+                })) {
+                target_list.push(ix);
+            }
+        }
+
+        for (var ix = 0, len = obj.length; ix < len; ix++) {
+            extra = target_list.indexOf(ix) > -1 ? "class='ab_ngsuretai'" : "";
+            str = "<a href='" + host + "/test/read.cgi/" + info.bbsname + "/" + obj[ix].key + "/l50'" + extra + ">";
+            str += "<span class='ab_order'>" + (ix + 1) + "</span>";
+            str += "<span class='ab_suretate'>" + obj[ix].suretate + "</span>";
+            str += obj[ix].suretai;
+            str += "<span class='ab_resamount'>" + obj[ix].resamount + "</span>";
+            str += "</a>";
+
+            new_sures.push(str);
+        }
+
+        return new_sures.join("");
+    }
+
+    function _generateContent(arr, info) {
+        var arrmap = [];
+        var str;
+        var host = location.host;
+        arrmap = arr.map(function(elm, ind) {
+            str = "<a href='" + host + "/test/read.cgi/" + info.bbsname + "/" + elm.key + "/l50'>";
+            str += "<span class='ab_order'>" + (ind + 1) + "</span>";
+            str += "<span class='ab_suretate'>" + elm.suretate + "</span>";
+            str += elm.suretai;
+            str += "<span class='ab_resamount'>" + elm.resamount + "</span></a>";
+
             return str;
         });
-        document.querySelector("small#trad").innerHTML = output.join("");
 
-        return;
+        return arrmap.join("");
     }
 
-    function _addLinks() {
-        var _newdiv = document.createElement("div");
-
-        _newdiv.classList.add("header");
+    function _generateHeaderHTML(info) {
         var header = "";
         header += "<a href='http://menu.open2ch.net/bbsmenu.html'>★BBSMENU</a><br>";
-        header += "<a href=/" + _info.bbsname + "/>■板に戻る</a><a href='http://open2ch.net/test/history.cgi'>履歴</a><a href=/" + _info.bbsname + "/subject.txt>★スレッド一覧(大漁)</a><a href=/" + _info.bbsname + "/kako/>★過去ログ</a><a href=/" + _info.bbsname + "/gomi.html >★ごみ箱(仮)</a>";
-        header += "<h3>" + _info.bbsnameJ + "</h3><hr>";
+        header += "<a href=/" + info.bbsname + "/>■板に戻る</a><a href='http://open2ch.net/test/history.cgi'>履歴</a><a href=/" + info.bbsname + "/subject.txt>★スレッド一覧(大漁)</a><a href=/" + info.bbsname + "/kako/>★過去ログ</a><a href=/" + info.bbsname + "/gomi.html >★ごみ箱(仮)</a>";
+        header += "<h3>" + info.bbsnameJ + "</h3><hr>";
+        return header;
+    }
 
-        _newdiv.innerHTML += header;
+    function _replaceSubbackPage(d, header, content) {
+        var bodyinner = "";
+        bodyinner += "<div class=header>" + header + "</div>";
+        bodyinner += "<div class=thread>" + content + "</div>";
+        bodyinner += "<div class=footer>" + "</div>";
 
-        var _div = document.getElementsByTagName("div")[0];
-        var _small = document.getElementById("trad");
-        _div.insertBefore(_newdiv, _small);
-
+        d.body.innerHTML = bodyinner;
         return;
     }
 
-    return {
-        info: _info
-    };
+
+
+    //public api
+    return _info;
 })();

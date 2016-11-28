@@ -10,59 +10,27 @@
 //.AMA.   .AMMA.P^YbmdP'.JMML.   `Ybmd9'     W      W     AMMmmmM `Mbmmd'.JMML.  
 //////////////////////////////////////////////////////////////////////////////*/
 
-td#topThreads > font > a:hover {
-    background-color: cyan;
-}
 
-td#topThreads > font > a:active {
-    background-color: gold;
-}
-
-#bottomThreads, #new_threads, #thread_more_table{
-	display:none;
-}
-
-/*----------------------------------------------------*/
-
-td#topThreads > font > a{
-	
-	display: block;
-	
-	/*
-	display: inline;
+/*
+	visibility: hideen;
+	見えなくなるが高さは残る
 	*/
-	margin-right: 10px;
+
+
+/*
+	display: none;
+	見えなくなるし高さも残らない
+	*/
+
+.ab_imgur {
+    visibility: hidden;
 }
 
-.ab_suretai{
-	text-decoration: none;
+.ab_oekaki {
+    visibility: hidden;
+}
+
+dd.ab_ngres {
 	color:red;
-	font-size: 5pt;
-}
-
-.ab_order:after{
-	content:": ";
-}
-
-.ab_suretate:before{
-	content:"【";
-}
-
-.ab_suretate:after{
-	content:"】";
-}
-
-
-.ab_ngsuretai{
-	text-decoration: none;
-	color:red;
-	font-size: 5pt;
-}
-
-.ab_resamount:before{
-	content:" (";
-}
-
-.ab_resamount:after{
-	content:")";
+	font-size: 1pt;
 }

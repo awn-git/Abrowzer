@@ -18,19 +18,15 @@
     var defaultconfigs;
 
     var suresavebtn = {
-        "abonetype": null,
-        "imgurabone": null,
-        "oekakiabone": null,
-        "ngkeywordregexp": null,
+        "enableRegExp_sure": null,
         "ngwords": null,
         "ngnames": null,
         "ngmails": null,
         "ngids": null
     };
     var suretaisavebtn = {
-        "suretaiabone": null,
-        "ngsuretai": null,
-        "ngsuretairegexp": null
+        "enableRegExp_suretai": null,
+        "ngsuretai": null
     }
 
 
@@ -183,7 +179,7 @@
 
 
     function _checkSureRegexp(obj) {
-        if (obj.ngkeywordregexp === "yes") {
+        if (obj.enableRegExp_sure === "yes") {
             try {
                 obj["ngwords"].split("\n").filter(function(elm) {
                     return elm !== "";
@@ -217,7 +213,7 @@
 
 
     function _checkSuretaiRegexp(obj) {
-        if (obj.ngsuretairegexp === "yes") {
+        if (obj.enableRegExp_suretai === "yes") {
             try {
                 obj["ngsuretai"].split("\n").filter(function(elm) {
                     return elm !== "";
@@ -378,7 +374,7 @@
                 return;
             }
 
-            //2つのkey集合が全単写でないなら終了
+            //keyが揃わないなら終了
             var myconkeys = Object.keys(myconfig);
             var defaultkeys = Object.keys(defaultconfigs);
             var isPropSame_m2d = false,

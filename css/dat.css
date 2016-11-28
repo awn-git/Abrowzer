@@ -88,3 +88,8 @@ body {
 .broken {
     color: black;
 }
+
+.ab_ngres {
+    color: red;
+    font-size: 20pt;
+}

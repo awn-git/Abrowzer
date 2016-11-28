@@ -35,7 +35,7 @@
             <div class="col-md-2 sidebar">
                 <ul class="nav nav-sidebar">
                     <li><a href="#ngconfig">NG設定</a></li>
-                    <li><a>　スレ</a></li>
+                    <li><a>　スレッド</a></li>
                     <li><a>　スレタイ</a></li>
                 </ul>
                 <ul class="nav nav-sidebar">
@@ -60,38 +60,13 @@
                         <a name="ngconfig"><h1 class="invisible">NG設定</h1></a>
                         <h1 class="page-header">NG設定</h1>
                         <div>
-                            <h3 class="sub-header text-info">スレの動作設定</h3>
+                            <h3 class="sub-header text-info">スレッド</h3>
                             <div>
-                                <label for="abonetype">あぼ〜んの種類は？：</label>
-                                <select id="abonetype" name="abonetype">
-                                    <option value="no">あぼ〜んしない</option>
-                                    <option value="normal">通常あぼ〜ん</option>
-                                    <option value="res">レスあぼ〜ん</option>
-                                    <option value="toumei">透明あぼ〜ん</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="imgurabone">imgur画像は：</label>
-                                <select id="imgurabone" name="imgurabone">
-                                    <option value="no">表示する</option>
-                                    <option value="yes">画像のみ非表示にする</option>
-                                    <option value="normal">レスごと通常あぼ〜んする</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="oekakiabone">お絵かき画像は：</label>
-                                <select id="oekakiabone" name="oekakiabone">
-                                    <option value="no">表示する</option>
-                                    <option value="yes">画像のみ非表示にする</option>
-                                    <option value="normal">レスごと通常あぼ〜んする</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="ngkeywordregexp">以下のキーワードは：</label>
-                                <select id="ngkeywordregexp" name="ngkeywordregexp">
+                                <label for="enableRegExp_sure">以下のキーワードは：</label>
+                                <select id="enableRegExp_sure" name="enableRegExp_sure">
                                     <option value="no">単純なNGキーワードとして入力する</option>
                                     <option value="yes">正規表現として入力する</option>
-                                </select>
+                                </select><br>
                                 <small class="text-muted">( ※正規表現って何？な人　→　<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Regular_Expressions" target="_blank">【MDN】正規表現</a> )</small>
                             </div>
                             <div>
@@ -121,20 +96,13 @@
                             <br>
                         </div>
                         <div>
-                            <h3 class="sub-header text-info">スレタイの動作設定</h3>
+                            <h3 class="sub-header text-info">スレタイ</h3>
                             <div>
-                                <label for="suretaiabone">スレタイをあぼ〜んする？：</label>
-                                <select id="suretaiabone" name="suretaiabone">
-                                    <option value="no">しない</option>
-                                    <option value="yes">する</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="ngsuretairegexp">以下のキーワードは：</label>
-                                <select id="ngsuretairegexp" name="ngsuretairegexp">
+                                <label for="enableRegExp_suretai">以下のキーワードは：</label>
+                                <select id="enableRegExp_suretai" name="enableRegExp_suretai">
                                     <option value="no">単純なNGキーワードとして入力する</option>
                                     <option value="yes">正規表現として入力する</option>
-                                </select>
+                                </select><br>
                                 <small class="text-muted">( ※正規表現って何？な人　→　<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Regular_Expressions" target="_blank">【MDN】正規表現</a> )</small> </div>
                             <div>
                                 <label for="ngsuretai">NGスレタイ：</label>
@@ -223,7 +191,7 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="../bootstrap/js/jQuery.min.js"></script>
     <script src="../bootstrap/js/bootstrap.min.js"></script>
-    <script src="../js/lib/holder.min.js"></script>
+    <!-- <script src="../js/lib/holder.min.js"></script> -->
     <script src="../js/dashboard.js"></script>
 </body>
 

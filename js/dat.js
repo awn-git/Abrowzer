@@ -12,140 +12,303 @@
 
 
 (function() {
-    var d = document;
-    var pre = d.getElementsByTagName("pre")[0];
-    var arr = pre.innerText.split("\n");
+    //private member
+    var _info = {};
+    var _suretaiobj;
+    var _header;
+    var _footer;
+    var _form;
 
-    //note: preタグ内の最後に存在する「改行のみの行」を取り除く
-    arr.pop();
+    //initializer
+    _init();
 
-    var origin = location.origin;
-    var pathname = location.pathname;
-    var surekey = pathname.match(/[0-9]{10}/)[0];
-    var bbsname = pathname.match(/^\/(.*?)\//)[1];
-    var suretai = arr[0].match(/^(.*?)<>(.*?)<>(.*?) ID:(.*?)<> (.*?) <>(.*?)$/)[6];
 
-    d.title = suretai;
+    //private method
+    function _init() {
+        var dat_arr = _resolveDAT(document);
 
-    var readcgi = origin + "/test/read.cgi/" + bbsname + "/" + surekey + "/";
-    var imagecgi = origin + "/test/image.cgi/" + bbsname + "/" + surekey + "/";
-    var matomeru = "https://2mtmex.com/?url=" + readcgi;
-    var itatop = origin + "/" + bbsname + "/";
-    var subject = itatop + "subject.txt";
-    var subback = itatop + "subback.html";
-    var bbsmenu = "http://open2ch.net/bbsmenu.html";
-    var rireki = "http://open2ch.net/test/history.cgi";
+        _info = _getPageInfo(dat_arr);
+        _sureobj = _getSureObj(dat_arr);
+        console.dir(_info);
+        console.dir(_sureobj);
 
-    var datobj = {
-        info: {
+        _header = _generateHeaderHTML(_info);
+        _footer = _generateFooterHTML(_info);
+        _form = _generateFormHTML(_info);
+
+        _assignEventHandler();
+        return;
+    }
+
+    function _assignEventHandler() {
+        chrome.runtime.onMessage.addListener(function(parm, sender, sendResponse) {
+            var regexp_arr;
+            var ng_target = [-1];
+            var dat_content;
+
+            if (parm.contexts.resabone === "yes") {
+                regexp_arr = _getRegExps(parm.dashboard);
+                ng_target = _detectNGRes(_sureobj, regexp_arr);
+            }
+
+            dat_content = _generateSureHTML(_sureobj, ng_target);
+            _replaceSubjectPage(_header, dat_content, _footer, _form);
+
+            return;
+        });
+        return;
+    }
+
+    function _resolveDAT(d) {
+        var arr = d.getElementsByTagName("pre")[0].innerText.split("\n");
+        arr.pop();
+        return arr;
+    }
+
+    function _getPageInfo(arr) {
+        var obj = {};
+        var suretai = arr[0].match(/^(.*?)<>(.*?)<>(.*?) ID:(.*?)<> (.*?) <>(.*?)$/)[6];
+        var lh = location.href.match(/(^.*open2ch.net)\/(.*)\/dat\/([0-9]{10})\.dat/);
+        var readcgi = lh[1] + "/test/read.cgi/" + lh[2] + "/" + lh[3] + "/";
+        var bbsname = lh[2];
+
+        obj = {
             suretai: suretai,
             url: readcgi,
             bbsname: bbsname,
             bbsnameJ: null,
-        },
-        res: []
-    };
-
-    var parse;
-    var parse_regexp = new RegExp(/^(.*?)<>(.*?)<>(.*?) ID:(.*?)<> (.*?) <>/);
-    for (var ix = 0, len = arr.length; ix < len; ix++) {
-        parse = arr[ix].match(parse_regexp);
-        if (parse) {
-            datobj.res.push({
-                name: parse[1].trim(),
-                mail: parse[2],
-                timestamp: parse[3],
-                id: parse[4],
-                text: parse[5]
-            });
-        } else {
-            datobj.res.push({
-                name: "あぼーん",
-                mail: "あぼーん",
-                timestamp: "あぼーん",
-                id: "あぼーん",
-                text: "あぼーん"
-            });
-        }
+        };
+        return obj;
     }
 
-    var threadhtml = [];
-    var str = "";
-    var extra = "";
-    var text_temp = "";
+    function _getSureObj(arr) {
+        var datobj = [];
+        var parse;
+        var parse_regexp = new RegExp(/^(.*?)<>(.*?)<>(.*?) ID:(.*?)<> (.*?) <>/);
+        var b_regexp = new RegExp(/<\/?b>/, "g");
+        var anka_regexp = new RegExp(/&gt;&gt;([0-9]{1,4})/, "g");
+        var url_regexp = new RegExp(/https?:\/\/[a-zA-Z0-9-_.:@!~*';\/?&=+$,%#]+/, "g");
 
-    var b_regexp = new RegExp(/<\/?b>/, "g");
-    var anka_regexp = new RegExp(/&gt;&gt;([0-9]{1,4})/, "g");
-    var url_regexp = new RegExp(/https?:\/\/[a-zA-Z0-9-_.:@!~*';\/?&=+$,%#]+/, "g");
+        for (var ix = 0, len = arr.length; ix < len; ix++) {
+            parse = arr[ix].match(parse_regexp);
+            if (parse) {
+                datobj.push({
+                    name: parse[1].trim().replace(b_regexp, ""),
+                    mail: parse[2],
+                    timestamp: parse[3],
+                    id: parse[4],
+                    text: parse[5].replace(anka_regexp, "<a href='#$1'>$&</a>")
+                        .replace(url_regexp, "<a href='$&' target='_blank'>$&</a>")
+                });
+            } else {
+                datobj.push({
+                    name: "あぼーん",
+                    mail: "あぼーん",
+                    timestamp: "あぼーん",
+                    id: "あぼーん",
+                    text: "あぼーん"
+                });
+            }
+        }
 
-    threadhtml = datobj.res.map(function(elm, ind) {
-        extra = elm.timestamp === "あぼーん" ? " broken" : "";
-        str = "<div class='res" + extra + "'>";
-        str += "<div class='reshead" + extra + "'>";
-        str += "<a name='" + (ind + 1) + "' class='resnum" + extra + "'>" + (ind + 1) + "</a>";
-        str += "<span class='name" + extra + "'>" + elm.name.replace(b_regexp, "") + "</span>";
-        str += "<span class='mail" + extra + "'>" + elm.mail + "</span>";
-        str += "<span class='timestamp" + extra + "'>" + elm.timestamp + "</span>";
-        str += "<span class='id" + extra + "'>" + elm.id + "</span>";
-        str += "</div>";
-        text_temp = elm.text.replace(anka_regexp, "<a href='#$1'>$&</a>")
-            .replace(url_regexp, "<a href='$&' target='_blank'>$&</a>");
-        str += "<div class='resbody" + extra + "'>" + text_temp + "</div>";
-        str += "</div>";
+        return datobj;
+    }
 
-        return str;
-    });
+    function _generateHeaderHTML(info) {
+        var header = "";
+        var origin = location.origin;
+        var pathname = location.pathname;
+        var surekey = pathname.match(/[0-9]{10}/)[0];
+        var bbsname = pathname.match(/^\/(.*?)\//)[1];
+        var suretai = info.suretai
+
+        var readcgi = origin + "/test/read.cgi/" + bbsname + "/" + surekey + "/";
+        var imagecgi = origin + "/test/image.cgi/" + bbsname + "/" + surekey + "/";
+        var matomeru = "https://2mtmex.com/?url=" + readcgi;
+        var itatop = origin + "/" + bbsname + "/";
+        var subject = itatop + "subject.txt";
+        var subback = itatop + "subback.html";
+        var bbsmenu = "http://open2ch.net/bbsmenu.html";
+        var rireki = "http://open2ch.net/test/history.cgi";
+
+        header += "<a href='" + bbsmenu + "'>BBSMENU</a><br>";
+        header += "<a href='" + itatop + "'>板に戻る</a>";
+        header += "<a href='" + rireki + "'>履歴</a>";
+        header += "<a href='" + subback + "'>スレッド一覧</a>";
+        header += "<a href='" + subject + "'>スレッド一覧(大漁)</a>";
+        header += "<a href='" + readcgi + "l50'>read.cgi</a>";
+        header += "<a href='#bottom'>↓</a><a name='top'></a><br>";
+        header += "<a href='" + matomeru + "'>まとめる</a>";
+        header += "<a href='" + imagecgi + "'>画像一覧</a>";
+        header += "<hr>";
+        header += "<h3 id='suretai'>" + suretai + "</h3>";
+
+        return header;
+    }
+
+    function _generateFooterHTML() {
+        var footer = "";
+
+        var origin = location.origin;
+        var pathname = location.pathname;
+        var surekey = pathname.match(/[0-9]{10}/)[0];
+        var bbsname = pathname.match(/^\/(.*?)\//)[1];
+
+        var readcgi = origin + "/test/read.cgi/" + bbsname + "/" + surekey + "/";
+        var imagecgi = origin + "/test/image.cgi/" + bbsname + "/" + surekey + "/";
+        var matomeru = "https://2mtmex.com/?url=" + readcgi;
+        var itatop = origin + "/" + bbsname + "/";
+        var subject = itatop + "subject.txt";
+        var subback = itatop + "subback.html";
+        var bbsmenu = "http://open2ch.net/bbsmenu.html";
+        var rireki = "http://open2ch.net/test/history.cgi";
+
+        footer += "<hr>";
+        footer += "<a href='" + bbsmenu + "'>BBSMENU</a><br>";
+        footer += "<a href='" + itatop + "'>板に戻る</a>";
+        footer += "<a href='" + rireki + "'>履歴</a>";
+        footer += "<a href='" + subback + "'>スレッド一覧</a>";
+        footer += "<a href='" + subject + "'>スレッド一覧(大漁)</a>";
+        footer += "<a href='" + readcgi + "l50'>read.cgi</a>";
+        footer += "<a href='#top'>↑</a><a name='bottom'></a><br>";
+        footer += "<a href='" + matomeru + "'>まとめる</a>";
+        footer += "<a href='" + imagecgi + "'>画像一覧</a>";
+
+        return footer;
+    }
+
+    function _generateFormHTML(info) {
+        var phorm = "";
+        var pathname = location.pathname;
+        var surekey = pathname.match(/[0-9]{10}/)[0];
+        var bbsname = pathname.match(/^\/(.*?)\//)[1];
+
+        phorm += "<form method='POST' action='/test/bbs.cgi?guid=ON' id='form2' style='margin-top:5pt'>";
+        phorm += "<input type='submit' value='書き込む' name='submit' id='submit_button'></input> ";
+        phorm += "名前：" + "<input size='10' id='FROM' NAME='FROM'></input> ";
+        phorm += "mail：" + "<input size='10' id='mail' name='mail'></input><br>";
+        phorm += "<textarea rows='5' cols='56' id='MESSAGE' name='MESSAGE'></textarea>";
+        phorm += "<input type='hidden' name='bbs' value='" + bbsname + "'>";
+        phorm += "<input type='hidden' name='key' value='" + surekey + "'>";
+        phorm += "<input type='hidden' name='time' value='" + Math.floor(Date.now() / 1000) + "'>";
+        phorm += "</form>";
+
+        return phorm;
+    }
+
+    function _getRegExps(lists) {
+        var isRegExp = lists.enableRegExp_sure;
+        var obj = {
+            ngids: _generateRegExp(lists.ngids, isRegExp),
+            ngmails: _generateRegExp(lists.ngmails, isRegExp),
+            ngnames: _generateRegExp(lists.ngnames, isRegExp),
+            ngwords: _generateRegExp(lists.ngwords, isRegExp)
+        };
+        return obj;
+    }
+
+    function _generateRegExp(list, isRegExp) {
+        var arr = [];
+        var temp1 = list.split("\n");
+        var temp2 = temp1.filter(function(elm) {
+            return elm !== "";
+        });
+
+        if (isRegExp === "yes") {
+            arr = temp2.map(function(elm) {
+                return new RegExp(elm);
+            });
+        } else {
+            arr = temp2.map(function(elm) {
+                var str = elm.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
+                return new RegExp(str);
+            });
+        }
+        return arr;
+    }
+
+    function _detectNGRes(resobj, regexp) {
+        var target = resobj;
+        var target_fix = [];
+
+        var t_name;
+        var t_mail;
+        var t_id;
+        var t_text;
+
+        var isFound = [];
 
 
-    var header = "";
-    header += "<a href='" + bbsmenu + "'>BBSMENU</a><br>";
-    header += "<a href='" + itatop + "'>板に戻る</a>";
-    header += "<a href='" + rireki + "'>履歴</a>";
-    header += "<a href='" + subback + "'>スレッド一覧</a>";
-    header += "<a href='" + subject + "'>スレッド一覧(大漁)</a>";
-    header += "<a href='" + readcgi + "'>read.cgi</a>";
-    header += "<a href='#bottom'>↓</a><a name='top'></a><br>";
-    header += "<a href='" + matomeru + "'>まとめる</a>";
-    header += "<a href='" + imagecgi + "'>画像一覧</a>";
-    header += "<hr>";
-    header += "<h3 id='suretai'>" + suretai + "</h3>";
+        for (var ix = 0, len = target.length; ix < len; ix++) {
+            t_text = target[ix].text;
+            isFound.push(regexp.ngwords.some(function(elm) {
+                return elm.test(t_text);
+            }));
 
-    var footer = "";
-    footer += "<hr>";
-    footer += "<a href='" + bbsmenu + "'>BBSMENU</a><br>";
-    footer += "<a href='" + itatop + "'>板に戻る</a>";
-    footer += "<a href='" + rireki + "'>履歴</a>";
-    footer += "<a href='" + subback + "'>スレッド一覧</a>";
-    footer += "<a href='" + subject + "'>スレッド一覧(大漁)</a>";
-    footer += "<a href='" + readcgi + "'>read.cgi</a>";
-    footer += "<a href='#top'>↑</a><a name='bottom'></a><br>";
-    footer += "<a href='" + matomeru + "'>まとめる</a>";
-    footer += "<a href='" + imagecgi + "'>画像一覧</a>";
+            t_name = target[ix].name;
+            isFound.push(regexp.ngnames.some(function(elm) {
+                return elm.test(t_name);
+            }));
 
-    var phorm = "";
-    phorm += "<form method='POST' action='/test/bbs.cgi?guid=ON' id='form2' style='margin-top:5pt'>";
-    phorm += "<input type='submit' value='書き込む' name='submit' id='submit_button'></input> ";
-    phorm += "名前：" + "<input size='10' id='FROM' NAME='FROM'></input> ";
-    phorm += "mail：" + "<input size='10' id='mail' name='mail'></input><br>";
-    phorm += "<textarea rows='5' cols='56' id='MESSAGE' name='MESSAGE'></textarea>";
-    phorm += "<input type='hidden' name='bbs' value='" + bbsname + "'>";
-    phorm += "<input type='hidden' name='key' value='" + surekey + "'>";
-    phorm += "<input type='hidden' name='time' value='" + Math.floor(Date.now() / 1000) + "'>";
-    phorm += "</form>";
+            t_mail = target[ix].mail;
+            isFound.push(regexp.ngmails.some(function(elm) {
+                return elm.test(t_mail);
+            }));
 
-    var bodyinner = "";
-    bodyinner += "<div class='header'>" + header + "</div>";
-    bodyinner += "<div class='thread'>" + threadhtml.join("") + "</div>";
-    bodyinner += "<div class='footer'>" + footer + "</div>";
-    bodyinner += "<div class='form'>" + phorm + "</div>";
+            t_id = target[ix].id;
+            isFound.push(regexp.ngids.some(function(elm) {
+                return elm.test(t_id);
+            }));
 
-    d.body.innerHTML = bodyinner;
+            if (isFound.some(function(elm) {
+                    return elm;
+                })) {
+                target_fix.push(ix);
+            }
+            isFound = [];
+        }
 
-    //note: datパース後はスレの一番上に移動
-    //note: スレの一番下に移動はwindow.scrollTo(0,document.body.scrollheight)で良いのだが、
-    //note: 　どうやらdatパース前のscrollheightに移動してしまうようだ。
-    window.scrollTo(0, 0);
+        return target_fix;
+    }
 
-    return datobj.info;
 
+    function _generateSureHTML(obj, ng_target) {
+        var arr = [];
+        var str;
+        var extra;
+        arr = obj.map(function(elm, ind) {
+            extra = elm.timestamp === "あぼーん" ? " broken" : "";
+            extra = ng_target.indexOf(ind) > -1 ? " ab_ngres" : "";
+
+            str = "<div class='res" + extra + "'>";
+            str += "<div class='reshead" + extra + "'>";
+            str += "<a name='" + (ind + 1) + "' class='resnum" + extra + "'>" + (ind + 1) + "</a>";
+            str += "<span class='name" + extra + "'>" + elm.name + "</span>";
+            str += "<span class='mail" + extra + "'>" + elm.mail + "</span>";
+            str += "<span class='timestamp" + extra + "'>" + elm.timestamp + "</span>";
+            str += "<span class='id" + extra + "'>" + elm.id + "</span>";
+            str += "</div>";
+            str += "<div class='resbody" + extra + "'>" + elm.text + "</div>";
+            str += "</div>";
+
+            return str;
+        });
+
+        return arr.join("");
+    }
+
+    function _replaceSubjectPage(header, dat_content, footer, form) {
+        var bodyinner = "";
+        bodyinner += "<div class='header'>" + header + "</div>";
+        bodyinner += "<div class='thread'>" + dat_content + "</div>";
+        bodyinner += "<div class='footer'>" + footer + "</div>";
+        bodyinner += "<div class='form'>" + form + "</div>";
+
+        document.body.innerHTML = bodyinner;
+
+        return;
+    }
+
+
+    return _info;
 })();
