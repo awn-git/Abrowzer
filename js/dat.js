@@ -97,7 +97,7 @@
                     mail: parse[2],
                     timestamp: parse[3],
                     id: parse[4],
-                    text: parse[5].replace(anka_regexp, "<a href='#$1'>$&</a>")
+                    text: parse[5].replace(anka_regexp, "<a href='#$1'>>>$1</a>")
                         .replace(url_regexp, "<a href='$&' target='_blank'>$&</a>")
                 });
             } else {
