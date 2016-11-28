@@ -156,7 +156,7 @@
         var str;
         var host = location.host;
         arrmap = arr.map(function(elm, ind) {
-            str = "<a href='" + host + "/test/read.cgi/" + info.bbsname + "/" + elm.key + "/l50'>";
+            str = "<a href='" + elm.url + "'>";
             str += "<span class='ab_order'>" + (ind + 1) + "</span>";
             str += "<span class='ab_suretate'>" + elm.suretate + "</span>";
             str += elm.suretai;
