@@ -23,11 +23,11 @@
 	*/
 
 .ab_imgur {
-    visibility: hidden;
+    display: none;
 }
 
 .ab_oekaki {
-    visibility: hidden;
+    display: none;
 }
 
 dd.ab_ngres {
