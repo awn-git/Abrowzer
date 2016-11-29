@@ -154,7 +154,7 @@
 
         for (var ix = 0, len = obj.length; ix < len; ix++) {
             extra = target_list.indexOf(ix) > -1 ? "class='ab_ngsuretai'" : "";
-            str = "<a href='" + host + "/test/read.cgi/" + info.bbsname + "/" + obj[ix].key + "/l50'" + extra + ">";
+            str = "<a href='http://" + host + "/test/read.cgi/" + info.bbsname + "/" + obj[ix].key + "/l50'" + extra + ">";
             str += "<span class='ab_order'>" + (ix + 1) + "</span>";
             str += "<span class='ab_suretate'>" + obj[ix].suretate + "</span>";
             str += obj[ix].suretai;
@@ -172,7 +172,7 @@
         var str;
         var host = location.host;
         arrmap = arr.map(function(elm, ind) {
-            str = "<a href='" + host + "/test/read.cgi/" + info.bbsname + "/" + elm.key + "/l50'>";
+            str = "<a href='http://" + host + "/test/read.cgi/" + info.bbsname + "/" + elm.key + "/l50'>";
             str += "<span class='ab_order'>" + (ind + 1) + "</span>";
             str += "<span class='ab_suretate'>" + elm.suretate + "</span>";
             str += elm.suretai;

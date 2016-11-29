@@ -141,7 +141,7 @@
         var new_sures = [];
         var str;
         var extra;
-        var host = location.host;
+        var host = "http://" + location.host;
 
         for (var ix = 0, len = obj.length; ix < len; ix++) {
             if (regexp.some(function(elm) {
@@ -169,7 +169,7 @@
     function _generateContent(arr, info) {
         var arrmap = [];
         var str;
-        var host = location.host;
+        var host = "http://" + location.host;
         arrmap = arr.map(function(elm, ind) {
             str = "<a href='" + host + "/test/read.cgi/" + info.bbsname + "/" + elm.key + "/l50'>";
             str += "<span class='ab_order'>" + (ind + 1) + "</span>";
