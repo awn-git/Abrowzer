@@ -190,7 +190,7 @@
 
     function _replaceSC(str) {
         //note: SC stands for Special Character
-        //note: 表示文字を文字実体参照に変換する
+        //note: NGキーワードに入力した特定の文字を、HTML文字実体参照に変換する
         var reply = str.replace(/&/g, "&amp;")
             .replace(/>/g, "&gt;")
             .replace(/</g, "&lt;")
