@@ -75,13 +75,29 @@
         var arr = [];
         var str;
         for (var ix = 0, len = obj.length; ix < len; ix++) {
-            str = obj[ix].innerText.match(/^[0-9]{1,4}: (.*) \(([0-9]{1,4})\)$/);
-            arr.push({
-                suretai: str[1],
-                resamount: str[2] - 0,
-                key: obj[ix].href.match(/[0-9]{10}/) - 0,
-                suretate: null
-            });
+            str = obj[ix].innerText.match(/^[0-9]{1,4}: (.*?) \(([0-9]{1,4})\)$/);
+            //note: スレタイが空文字列の時にmatchしないので例外処理で対処する
+            //note: 例外処理に於いては、スレタイは空文字列のままでpushする
+            //see:  https://github.com/awn-git/Abrowzer/issues/22
+            try {
+                arr.push({
+                    suretai: str[1],
+                    resamount: str[2] - 0,
+                    key: obj[ix].href.match(/[0-9]{10}/) - 0,
+                    suretate: null
+                });
+            } catch (e) {
+                console.log(e);
+                console.log("ix: ", ix);
+                console.log("obj[ix]: ", obj[ix]);
+                str = obj[ix].innerText.match(/^[0-9]{1,4}:(.*?)\(([0-9]{1,4})\)$/);
+                arr.push({
+                    suretai: str[1],
+                    resamount: str[2] - 0,
+                    key: obj[ix].href.match(/[0-9]{10}/) - 0,
+                    suretate: null
+                });
+            }
         }
         return arr;
     }
