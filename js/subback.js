@@ -179,7 +179,6 @@
         var bodyinner = "";
         bodyinner += "<div class=header>" + header + "</div>";
         bodyinner += "<div class=thread>" + content + "</div>";
-        bodyinner += "<div class=footer>" + "</div>";
 
         d.body.innerHTML = bodyinner;
         return;
