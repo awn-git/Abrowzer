@@ -93,8 +93,6 @@
         var parse;
         var parse_regexp = new RegExp(/^(.*?)<>(.*?)<>(.*?) ID:(.*?)<> (.*?) <>/);
         var b_regexp = new RegExp(/<\/?b>/, "g");
-        var anka_regexp = new RegExp(/&gt;&gt;([0-9]{1,4})/, "g");
-        var url_regexp = new RegExp(/https?:\/\/[a-zA-Z0-9-_.:@!~*';\/?&=+$,%#]+/, "g");
 
         for (var ix = 0, len = arr.length; ix < len; ix++) {
             parse = arr[ix].match(parse_regexp);
@@ -104,8 +102,7 @@
                     mail: parse[2],
                     timestamp: parse[3],
                     id: parse[4],
-                    text: parse[5].replace(anka_regexp, "<a href='#$1'>>>$1</a>")
-                        .replace(url_regexp, "<a href='$&' target='_blank'>$&</a>")
+                    text: parse[5]
                 });
             } else {
                 datobj.push({
@@ -223,15 +220,31 @@
 
         if (isRegExp === "yes") {
             arr = temp2.map(function(elm) {
+                elm = _replaceSC(elm);
                 return new RegExp(elm);
             });
         } else {
             arr = temp2.map(function(elm) {
                 var str = elm.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
+                str = _replaceSC(str);
                 return new RegExp(str);
             });
         }
+
         return arr;
+    }
+
+    function _replaceSC(str) {
+        //note: SC stands for Special Character
+        //note: 表示文字を文字実体参照に変換する
+        var reply = str.replace(/&/g, "&amp;")
+            .replace(/>/g, "&gt;")
+            .replace(/</g, "&lt;")
+            .replace(/\\n/g, "<br>")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+
+        return reply;
     }
 
     function _detectNGRes(resobj, regexp) {
@@ -283,6 +296,12 @@
         var arr = [];
         var str;
         var extra;
+
+        var anka_regexp = new RegExp(/&gt;&gt;([0-9]{1,4})/, "g");
+        var url_regexp = new RegExp(/https?:\/\/[a-zA-Z0-9-_.:@!~*';\/?&=+$,%#]+/, "g");
+        var text_temp;
+
+
         arr = obj.map(function(elm, ind) {
             extra = elm.timestamp === "あぼーん" ? " broken" : "";
             extra = ng_target.indexOf(ind) > -1 ? " ab_ngres" : "";
@@ -295,7 +314,8 @@
             str += "<span class='timestamp" + extra + "'>" + elm.timestamp + "</span>";
             str += "<span class='id" + extra + "'>" + elm.id + "</span>";
             str += "</div>";
-            str += "<div class='resbody" + extra + "'>" + elm.text + "</div>";
+            text_temp = elm.text.replace(anka_regexp, "<a href='#$1'>$&</a>").replace(url_regexp, "<a href='$&' target='_blank'>$&</a>");
+            str += "<div class='resbody" + extra + "'>" + text_temp + "</div>";
             str += "</div>";
 
             return str;
@@ -316,6 +336,5 @@
         return;
     }
 
-    debugger;
     return _info;
 })();

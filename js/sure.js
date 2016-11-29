@@ -137,9 +137,20 @@
 
     function _parseDD(dd) {
         var arr = [];
-        var dd_regexp = new RegExp(/  [0-9]*件.*\n$/);
+        var str;
         for (var ix = 0, len = dd.length; ix < len; ix++) {
-            arr.push(dd[ix].innerText.replace(dd_regexp, ""));
+            str = dd[ix].innerHTML;
+            //note: 消せそうなタグなどを消しておく
+            //note: <ares...タグ -> 安価逆参照機能のタグ
+            //note: あまり自信がない。。
+            str = str.replace(/<ares num[\s\S]*<\/ares>/, "")
+                .replace(/<a rel="nofollow" href="\/test\/read.cgi\/.*\/[0-9]{1,10}\/[0-9]{1,4}">/g,"")
+                .replace(/<a rel="nofollow" href="\/test\/read.cgi\/.*\/[0-9]{1,10}\/[0-9]{1,4}-[0-9]{1,4}">/g,"")
+                .replace(/<a rel="nofollow" href="http:\/\/.*\.open2ch\.net\/test\/read\.cgi\/.*\/[0-9]{1,10}\/.*?" target="_blank">/g,"")
+                .replace("<\/a>", "")
+                .replace(/\n/g, "");
+
+            arr.push(str);
         }
         return arr;
     }
@@ -164,15 +175,30 @@
 
         if (isRegExp === "yes") {
             arr = temp2.map(function(elm) {
+                elm = _replaceSC(elm);
                 return new RegExp(elm);
             });
         } else {
             arr = temp2.map(function(elm) {
                 var str = elm.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
+                str = _replaceSC(str);
                 return new RegExp(str);
             });
         }
         return arr;
+    }
+
+    function _replaceSC(str) {
+        //note: SC stands for Special Character
+        //note: 表示文字を文字実体参照に変換する
+        var reply = str.replace(/&/g, "&amp;")
+            .replace(/>/g, "&gt;")
+            .replace(/</g, "&lt;")
+            .replace(/\\n/g, "<br>")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+
+        return reply;
     }
 
     function _execResAbone(resobj, regexp) {
