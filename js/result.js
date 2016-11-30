@@ -30,10 +30,12 @@
         chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
             if (message.download) {
                 execDownload(message.download);
+                assignIncrementalSearch();
             }
 
             if (message.extracturl) {
                 showURLs(message.extracturl);
+                assignIncrementalSearch();
             }
 
         });
@@ -52,7 +54,7 @@
     }
 
     function execDownload(obj) {
-        d.getElementById("h1").innerText = "「" + obj.suretai + "」スレ の画像URL";
+        d.getElementById("h1").innerText = "画像URL";
         var result = d.getElementById("result");
 
         if (obj.images.length === 0) {
@@ -62,15 +64,23 @@
             return;
         }
 
+        //note: div_incはデフォルト非表示 -> remove("dontwant")で非表示解除
+        var div_inc = d.getElementById("inc");
+        div_inc.classList.remove("dontwant");
+
         var imagelist = obj.images.map(function(elm) {
-            return "<li>" + elm + "</li>";
+            return "<li>" + "<a href='" + elm + "' target='_blank'>" + elm + "</a></li>"
         });
-        result.innerHTML = "<ol>" + imagelist.join("") + "</ol>";
+
+        var ul_elm = "<ul>" + imagelist.join("") + "</ul>";
+        var info = "<h2>参照元：<a href='" + obj.url + "' target='_blank'>" + obj.suretai + "</a></h2>";
+
+        result.innerHTML = "<div id='info'>" + info + "</div><hr><div id='data'>" + ul_elm + "</div><hr>";
 
         var fileurl;
         var filename;
         var filepath;
-        if (confirm("大量のダウンロードにはリスクが伴います。\nそれでもあなたはダウンロードを実行しますか？")) {
+        if (confirm("大量のダウンロードにはリスクが伴います。\n\nいかなるリスクも自己責任を覚悟の上で、\n\nダウンロードを実行しますか？")) {
             var timestamp = (new Date().getFullYear()) + "" + ("0" + (new Date().getMonth() + 1)).substr(-2) + "" + ("0" + new Date().getDate()).substr(-2) + "_" + ("0" + new Date().getHours()).substr(-2) + "" + ("0" + new Date().getMinutes()).substr(-2) + "" + ("0" + new Date().getSeconds()).substr(-2) + "_" + ("000" + new Date().getMilliseconds()).substr(-3);
 
             var message = "ダウンロード先のフォルダ名を入力してください。\n";
@@ -104,49 +114,115 @@
             chrome.downloads.showDefaultFolder();
         } else {
             alert("ダウンロードを中止しました。");
+            removeResultPage();
         }
-        removeResultPage();
+
         return;
     }
 
-    function showURLs(obj) {
-        console.dir(obj);
-        //var url_regexp = new RegExp(/https?:\/\/[a-zA-Z0-9-_.:@!~*';\/?&=+$,%#]+/, "g");
+    function findURLstring(obj) {
+        var arr = [];
+        var matches;
         var url_regexp = new RegExp(/https?:\/\/[a-zA-Z0-9-_.:@!~*;\/?&=+$,%#]+/, "g");
-        var output = [];
-        var res;
 
-        if(obj.res){
-         res = obj.res;    
-        }else{
-            res = obj;
-        }
-        
-
-        var temp;
-        for (var ix = 0, len = res.length; ix < len; ix++) {
-            temp = res[ix].text.match(url_regexp);
-            if (temp) {
-                for (var ixx = 1, lenx = temp.length; ixx < lenx; ixx++) {
-                    output.push(temp[ixx]);
+        for (var ix = 0, len = obj.length; ix < len; ix++) {
+            matches = obj[ix].text.match(url_regexp);
+            if (matches) {
+                if (Array.isArray(matches)) {
+                    for (var ixx = 0, lenx = matches.length; ixx < lenx; ixx++) {
+                        arr.push(matches[ixx]);
+                    }
+                } else {
+                    arr.push(matches);
                 }
             }
         }
-        console.dir(output);
 
-        d.getElementById("h1").innerText = "URL抽出結果";
-        output = output.filter(function(elm,ind,arr){
+        return arr;
+    }
+
+    function filterURLstring(url_arr) {
+        var arr = [];
+
+        //note: 重複除外
+        arr = url_arr.filter(function(elm, ind, arr) {
             return arr.indexOf(elm) === ind;
         });
-        debugger;
-        alert("datの時何かがおかしい。。。")
-        var urllist = output.map(function(elm) {
-            return "<li>" + elm + "</li>";
+
+        //note: ユーザーが投稿していない(と思われる)URLは除外する
+        //note: imgur画像のうちサムネイル表示用のURLは除外する
+        var excepts = [
+            /\/\/i\.imgur\.com\/.{7}s\.*/,
+            /image\.open2ch\.net\/image\/blank.gif/,
+            /\/\/open\.open2ch\.net\/image\/.*/,
+            /img\.youtube\.com\/.*/
+        ];
+
+        arr = arr.filter(function(elm) {
+            return !excepts.some(function(inelm) {
+                return inelm.test(elm);
+            });
         });
-        result.innerHTML = "<ol>" + urllist.join("") + "</ol>";
-        removeResultPage();
+
+        return arr;
+    }
+
+    function showURLs(obj) {
+        var url_found = [];
+        var url_collects = [];
+        url_found = findURLstring(obj.data);
+        url_filtered = filterURLstring(url_found);
+
+
+        if (url_filtered.length === 0) {
+            alert("URLが一つも貼られてないみたい。。");
+            removeResultPage();
+            return;
+        }
+
+        //note: div_incはデフォルト非表示 -> remove("dontwant")で非表示解除
+        var div_inc = d.getElementById("inc");
+        div_inc.classList.remove("dontwant");
+
+        var lists;
+        var lists = url_filtered.map(function(elm) {
+            return "<li>" + "<a href='" + elm + "' target='_blank'>" + elm + "</a></li>";
+        });
+
+        var info = "<h2>参照元：【" + obj.info.bbsname + "】<a href='" + obj.info.url + "l50' target='_blank'>" + obj.info.suretai + "</a></h2>";
+        var ul_elm = "<ul>" + lists.join("") + "</ul>";
+        d.getElementById("result").innerHTML = "<div id='info'>" + info + "</div><hr>" + "<div id='data'>" + ul_elm + "</div><hr>";
+        d.getElementById("h1").innerText = "URL抽出結果";
         return;
     }
+
+    function assignIncrementalSearch() {
+        var list_node = d.querySelectorAll("div#result li");
+        var list_data = [];
+        for (var ix = 0, len = list_node.length; ix < len; ix++) {
+            list_data.push(list_node[ix].innerText);
+        }
+
+        var elm = d.getElementById("inc_input");
+        var input_data;
+        var regexp;
+
+        elm.addEventListener("keyup", function() {
+            input_data = elm.value;
+            regexp = new RegExp(input_data, "i");
+
+            for (var ix = 0, len = list_node.length; ix < len; ix++) {
+                if (regexp.test(list_data[ix])) {
+                    list_node[ix].classList.remove("dontwant");
+                } else {
+                    list_node[ix].classList.add("dontwant");
+                }
+            }
+            return;
+        });
+        return;
+    }
+
 
     //API
     return;
