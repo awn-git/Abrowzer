@@ -324,7 +324,6 @@ window.bg = (function() {
         return;
     }
 
-
     function _evaluateMessage() {
         chrome.runtime.onMessage.addListener(function(parm, sender) {
             _updateContextMenu(_bgobj.preserve.favorite.ita, parm.pagetype);
@@ -452,7 +451,6 @@ window.bg = (function() {
     function _injectItatop(parm, sender) {
         chrome.tabs.executeScript(sender.tab.id, { file: "js/itatop.js" }, function(response) {
             chrome.tabs.insertCSS(sender.tab.id, { file: "css/itatop.css" });
-            console.dir( response[0] );
             _bgobj.temporary = response[0];
             _storeHistory("ita", _bgobj.temporary);
 
@@ -473,7 +471,7 @@ window.bg = (function() {
         chrome.tabs.executeScript(sender.tab.id, { file: "js/sure.js" }, function(response) {
             chrome.tabs.insertCSS(sender.tab.id, { file: user_css }, function(parm) {
                 if (chrome.runtime.lastError) {
-                    console.log("insert css/sure.css because " + user_css + " was not found.");
+                    //console.log("insert css/sure.css because " + user_css + " was not found.");
                     chrome.tabs.insertCSS(sender.tab.id, { file: "css/sure.css" });
                 }
             });
@@ -502,7 +500,6 @@ window.bg = (function() {
         return;
     }
 
-
     function _injectDat(parm, sender) {
         var bbsname = sender.url.match(/^.*open2ch.net\/(.*?)\/dat\/[0-9]{10}.dat/)[1];
         var user_css = "css/user/dat/" + bbsname + ".css";
@@ -510,7 +507,7 @@ window.bg = (function() {
         chrome.tabs.executeScript(sender.tab.id, { file: "js/dat.js" }, function(response) {
             chrome.tabs.insertCSS(sender.tab.id, { file: user_css }, function(parm) {
                 if (chrome.runtime.lastError) {
-                    console.log("insert css/dat.css because " + user_css + " was not found.");
+                    //console.log("insert css/dat.css because " + user_css + " was not found.");
                     chrome.tabs.insertCSS(sender.tab.id, { file: "css/dat.css" });
                 }
             });
@@ -772,14 +769,6 @@ window.bg = (function() {
         return;
     }
 
-/*
-    function _extractURL(info,tab){
-        chrome.tabs.sendMessage(tab.id,{extracturl:"extracturl"},function(parm){
-            console.dir( parm );
-        });
-    }
-*/
-
    function _extractURL(tab) {
         chrome.tabs.query({ title: "Abrowzer::Result" }, function(query) {
             if (query.length !== 0) {
@@ -804,14 +793,12 @@ window.bg = (function() {
         return;
     }
 
-
     function _createContextMenu(obj) {
         for (var key in obj) {
             chrome.contextMenus.create(obj[key]);
         }
         return;
     }
-
 
     function _assignContextMenuLister() {
         chrome.contextMenus.onClicked.addListener(function(info, tab) {
@@ -875,52 +862,8 @@ window.bg = (function() {
         return;
     }
 
-
     /* 集合演算ユーティリティ */
     Util.Array = (function() {
-        /* 以下、重複する要素を持たない配列を入力の前提としない */
-        //恒等写像
-        function _identity(arr) {
-            return arr.map(function(elm) {
-                return elm;
-            });
-        }
-
-        //重複除去
-        function _uniq(arr) {
-            return arr.filter(function(elm, ind, ary) {
-                return ary.indexOf(elm) === ind;
-            });
-        }
-
-        //配列が集合っぽいか否か
-        function _isSet(arr) {
-            return _uniq(arr).length === arr.length;
-        }
-
-        /* 以下、重複する要素を持たない配列を入力の前提とする */
-        //集合が等しいか否か
-        function _equal(arr1, arr2) {
-            var rtn1 = (arr1.map(function(elm) {
-                return arr2.includes(elm);
-            })).every(function(elm) {
-                return elm;
-            });
-            var rtn2 = (arr2.map(function(elm) {
-                return arr1.includes(elm);
-            })).every(function(elm) {
-                return elm;
-            });
-            return rtn1 && rtn2;
-        }
-
-        //和集合
-        function _union(arr1, arr2) {
-            var con = arr1.concat(arr2);
-            var rtn = _uniq(con);
-            return rtn;
-        }
-
         //差集合
         function _diff(arr1, arr2) {
             var rtn = arr1.filter(function(elm) {
@@ -929,22 +872,8 @@ window.bg = (function() {
             return rtn;
         }
 
-        //共通部分
-        function _intersection(arr1, arr2) {
-            var rtn = arr1.filter(function(elm) {
-                return arr2.includes(elm);
-            });
-            return rtn;
-        }
-
         return {
-            uniq: _uniq,
-            isSet: _isSet,
-            identity: _identity,
-            equal: _equal,
-            union: _union,
-            diff: _diff,
-            intersection: _intersection
+            diff: _diff
         };
     })();
 

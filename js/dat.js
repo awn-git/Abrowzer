@@ -49,14 +49,12 @@
                     regexp_arr = _getRegExps(parm.dashboard);
                     ng_target = _detectNGRes(_sureobj, regexp_arr);
                 }
+                dat_content = _generateSureHTML(_sureobj, ng_target);
+                _replaceSubjectPage(_header, dat_content, _footer, _form);
             }
 
-            dat_content = _generateSureHTML(_sureobj, ng_target);
-            _replaceSubjectPage(_header, dat_content, _footer, _form);
-
-
             if (parm.extracturl === "extracturl") {
-                sendResponse(_sureobj);
+                sendResponse({info: _info, data: _sureobj});
             }
 
             return;

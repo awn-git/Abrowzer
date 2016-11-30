@@ -62,11 +62,14 @@
                 if (parm.contexts.oekakiabone === "yes") {
                     _execOekakiAbone(document);
                 }
-
             }
 
             if (parm.extracturl === "extracturl") {
-                sendResponse(resobj);
+                var data = [];
+                for (var ix = 0, len = resobj.dd.length; ix < len; ix++) {
+                    data.push({ text: resobj.dd[ix].innerHTML });
+                }
+                sendResponse({info: _info, data: data});
             }
 
             return;
@@ -142,11 +145,11 @@
             str = dd[ix].innerHTML;
             //note: 消せそうなタグなどを消しておく
             //note: <ares...タグ -> 安価逆参照機能のタグ
-            //note: あまり自信がない。。
+            //note: この処理はあまり自信がない。。
             str = str.replace(/<ares num[\s\S]*<\/ares>/, "")
-                .replace(/<a rel="nofollow" href="\/test\/read.cgi\/.*\/[0-9]{1,10}\/[0-9]{1,4}">/g,"")
-                .replace(/<a rel="nofollow" href="\/test\/read.cgi\/.*\/[0-9]{1,10}\/[0-9]{1,4}-[0-9]{1,4}">/g,"")
-                .replace(/<a rel="nofollow" href="http:\/\/.*\.open2ch\.net\/test\/read\.cgi\/.*\/[0-9]{1,10}\/.*?" target="_blank">/g,"")
+                .replace(/<a rel="nofollow" href="\/test\/read.cgi\/.*\/[0-9]{1,10}\/[0-9]{1,4}">/g, "")
+                .replace(/<a rel="nofollow" href="\/test\/read.cgi\/.*\/[0-9]{1,10}\/[0-9]{1,4}-[0-9]{1,4}">/g, "")
+                .replace(/<a rel="nofollow" href="http:\/\/.*\.open2ch\.net\/test\/read\.cgi\/.*\/[0-9]{1,10}\/.*?" target="_blank">/g, "")
                 .replace("<\/a>", "")
                 .replace(/\n/g, "");
 
