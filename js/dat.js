@@ -51,10 +51,11 @@
                 }
                 dat_content = _generateSureHTML(_sureobj, ng_target);
                 _replaceSubjectPage(_header, dat_content, _footer, _form);
+                _assignIncrementalSearch("incre_inpu", "dontwant", "div.res", "div.resbody");
             }
 
             if (parm.extracturl === "extracturl") {
-                sendResponse({info: _info, data: _sureobj});
+                sendResponse({ info: _info, data: _sureobj });
             }
 
             return;
@@ -142,6 +143,9 @@
         header += "<a href='#bottom'>↓</a><a name='top'></a><br>";
         header += "<a href='" + matomeru + "'>まとめる</a>";
         header += "<a href='" + imagecgi + "'>画像一覧</a>";
+        //experement
+        header += "<div id='incre><form name='incre_form'>フィルタ：<input type='text' size='60' id='incre_inpu'></input></form></div>";
+        //experement
         header += "<hr>";
         header += "<h3 id='suretai'>" + suretai + "</h3>";
 
@@ -331,6 +335,45 @@
 
         document.body.innerHTML = bodyinner;
 
+        return;
+    }
+
+    function _assignIncrementalSearch(input_id, label, node_display, node_control) {
+
+        /* note: 
+            - input_id: (id) - 入力欄のid
+            - label: (class) - マッチング対象からremoveし、非マッチング対象にaddするclass
+            - node_display: (CSS Selector) - このノードにlavelをadd/removeする
+            - node_control: (CSS Selector) - このノードのinnerTextをマッチング対象とする
+              - ただし、node_control === undefinedの場合 node_displayを用いる
+        */
+
+        var d = document;
+        var display = d.querySelectorAll(node_display);
+        var control_temp = node_control === undefined ? display : d.querySelectorAll(node_control);
+        var control = [];
+
+        for (var ix = 0, len = control_temp.length; ix < len; ix++) {
+            control.push(control_temp[ix].innerText);
+        }
+
+        var input_elm = d.getElementById(input_id);
+        var input_data;
+        var regexp;
+
+        input_elm.addEventListener("keyup", function() {
+            input_data = input_elm.value.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
+            regexp = new RegExp(input_data, "i");
+
+            for (var ix = 0, len = display.length; ix < len; ix++) {
+                if (regexp.test(control[ix])) {
+                    display[ix].classList.remove(label);
+                } else {
+                    display[ix].classList.add(label);
+                }
+            }
+            return;
+        });
         return;
     }
 

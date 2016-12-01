@@ -13,36 +13,35 @@
 
 (function() {
     //member
-    var d = document;
 
 
     //init
-    init();
+    _init();
 
 
     //method
-    function init() {
-        listenMessage();
+    function _init() {
+        _listenMessage();
         return;
     }
 
-    function listenMessage() {
+    function _listenMessage() {
         chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
             if (message.download) {
-                execDownload(message.download);
-                assignIncrementalSearch();
+                _execDownload(message.download);
+                _assignIncrementalSearch("inc_input", "dontwant", "div#result li", undefined);
             }
 
             if (message.extracturl) {
-                showURLs(message.extracturl);
-                assignIncrementalSearch();
+                _showURLs(message.extracturl);
+                _assignIncrementalSearch("inc_input", "dontwant", "div#result li", undefined);
             }
 
         });
         return;
     }
 
-    function removeResultPage() {
+    function _removeResultPage() {
         chrome.tabs.query({ title: "Abrowzer::Result" }, function(query) {
             chrome.tabs.onActivated.addListener(function(activeInfo) {
                 if (activeInfo.tabId !== query[0].id) {
@@ -53,14 +52,15 @@
         return;
     }
 
-    function execDownload(obj) {
+    function _execDownload(obj) {
+        var d = document;
         d.getElementById("h1").innerText = "画像URL";
         var result = d.getElementById("result");
 
         if (obj.images.length === 0) {
             alert("このスレには画像は貼られていないようだ。。");
             result.innerHTML = "<p>このスレには画像は貼られていないようだ。。</p>";
-            removeResultPage();
+            _removeResultPage();
             return;
         }
 
@@ -69,7 +69,7 @@
         div_inc.classList.remove("dontwant");
 
         var imagelist = obj.images.map(function(elm) {
-            return "<li>" + "<a href='" + elm + "' target='_blank'>" + elm + "</a></li>"
+            return "<li>" + "<a href='" + elm + "' target='_blank'>" + elm + "</a></li>";
         });
 
         var ul_elm = "<ul>" + imagelist.join("") + "</ul>";
@@ -92,7 +92,7 @@
             var path = prompt(message);
             if (path === null) {
                 alert("ダウンロードを中止しました。");
-                removeResultPage();
+                _removeResultPage();
                 return;
             }
 
@@ -114,13 +114,14 @@
             chrome.downloads.showDefaultFolder();
         } else {
             alert("ダウンロードを中止しました。");
-            removeResultPage();
+            _removeResultPage();
         }
 
         return;
     }
 
-    function findURLstring(obj) {
+    function _findURLstring(obj) {
+        var d = document;
         var arr = [];
         var matches;
         var url_regexp = new RegExp(/https?:\/\/[a-zA-Z0-9-_.:@!~*;\/?&=+$,%#]+/, "g");
@@ -141,7 +142,8 @@
         return arr;
     }
 
-    function filterURLstring(url_arr) {
+    function _filterURLstring(url_arr) {
+        var d = document;
         var arr = [];
 
         //note: 重複除外
@@ -167,16 +169,17 @@
         return arr;
     }
 
-    function showURLs(obj) {
+    function _showURLs(obj) {
+        var d = document;
         var url_found = [];
-        var url_collects = [];
-        url_found = findURLstring(obj.data);
-        url_filtered = filterURLstring(url_found);
+        var url_filtered = [];
+        url_found = _findURLstring(obj.data);
+        url_filtered = _filterURLstring(url_found);
 
 
         if (url_filtered.length === 0) {
             alert("URLが一つも貼られてないみたい。。");
-            removeResultPage();
+            _removeResultPage();
             return;
         }
 
@@ -185,7 +188,7 @@
         div_inc.classList.remove("dontwant");
 
         var lists;
-        var lists = url_filtered.map(function(elm) {
+        lists = url_filtered.map(function(elm) {
             return "<li>" + "<a href='" + elm + "' target='_blank'>" + elm + "</a></li>";
         });
 
@@ -196,26 +199,38 @@
         return;
     }
 
-    function assignIncrementalSearch() {
-        var list_node = d.querySelectorAll("div#result li");
-        var list_data = [];
-        for (var ix = 0, len = list_node.length; ix < len; ix++) {
-            list_data.push(list_node[ix].innerText);
+    function _assignIncrementalSearch(input_id, label, node_display, node_control) {
+
+        /* note: 
+            - input_id: (id) - 入力欄のid
+            - label: (class) - マッチング対象からremoveし、非マッチング対象にaddするclass
+            - node_display: (CSS Selector) - このノードにlavelをadd/removeする
+            - node_control: (CSS Selector) - このノードのinnerTextをマッチング対象とする
+              - ただし、node_control === undefinedの場合 node_displayを用いる
+        */
+
+        var d = document;
+        var display = d.querySelectorAll(node_display);
+        var control_temp = node_control === undefined ? display : d.querySelectorAll(node_control);
+        var control = [];
+
+        for (var ix = 0, len = control_temp.length; ix < len; ix++) {
+            control.push(control_temp[ix].innerText);
         }
 
-        var elm = d.getElementById("inc_input");
+        var input_elm = d.getElementById(input_id);
         var input_data;
         var regexp;
 
-        elm.addEventListener("keyup", function() {
-            input_data = elm.value;
+        input_elm.addEventListener("keyup", function() {
+            input_data = input_elm.value.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
             regexp = new RegExp(input_data, "i");
 
-            for (var ix = 0, len = list_node.length; ix < len; ix++) {
-                if (regexp.test(list_data[ix])) {
-                    list_node[ix].classList.remove("dontwant");
+            for (var ix = 0, len = display.length; ix < len; ix++) {
+                if (regexp.test(control[ix])) {
+                    display[ix].classList.remove(label);
                 } else {
-                    list_node[ix].classList.add("dontwant");
+                    display[ix].classList.add(label);
                 }
             }
             return;

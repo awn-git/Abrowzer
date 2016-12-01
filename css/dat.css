@@ -90,5 +90,10 @@ body {
 }
 
 .ab_ngres {
-    background-color: aliceblue;
+    /* background-color: aliceblue; */
+    display: none;
+}
+
+div.dontwant{
+    display:none;
 }
