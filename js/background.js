@@ -136,7 +136,7 @@ window.bg = (function() {
         type: "normal",
         id: "jump",
         parentId: "abrowzer",
-        documentUrlPatterns: ["http://*.open2ch.net/*"]
+        //documentUrlPatterns: ["http://*.open2ch.net/*"]
     };
 
     _conmenu.extracturl = {
@@ -245,6 +245,7 @@ window.bg = (function() {
                 _bgobj.preserve.contexts = _defaultcontexts;
                 _saveLocalStorage(_bgobj);
             }
+            _updateContextMenu(_bgobj.preserve.favorite.ita, null);
             return;
         });
         return;
