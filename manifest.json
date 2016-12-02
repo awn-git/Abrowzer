@@ -1,33 +1,31 @@
 {
 
-  "author":"Awn",
-  "homepage_url":"https://twitter.com/Awn_tw",
-  "name": "Abrowzer",
-  "version": "1.0.0",
-  "manifest_version": 2,
-  "description": "Abrowzerはぶらぶらと良い暇つぶしをするための、おーぷん２ちゃんねる内で動作するGoogle Chrome拡張機能です。",
+    "author": "Awn",
+    "homepage_url": "https://github.com/awn-git/Abrowzer/tree/develop",
+    "name": "Abrowzer",
+    "version": "0.0.0",
+    "manifest_version": 2,
+    "description": "Abrowzerはぶらぶらと良い暇つぶしをするための、おーぷん２ちゃんねる内で動作するGoogle Chrome拡張機能です。",
 
-  "permissions":[
-  "tabs","storage","contextMenus","webRequest","webRequestBlocking","downloads","alarms", "http://*.open2ch.net/*","https://*.open2ch.net/*"
-  ],
+    "permissions": [
+        "tabs", "storage", "contextMenus", "webRequest", "webRequestBlocking", "downloads", "alarms", "http://*.open2ch.net/*"
+    ],
 
-  "content_scripts":[
-    {
-      "matches":["http://*.open2ch.net/*","https://*.open2ch.net/*"],
-      "js":["js/inspectwebpage.js"]
+    "content_scripts": [{
+        "matches": ["http://*.open2ch.net/*"],
+        "js": ["js/inspectwebpage.js"]
+    }],
+
+    "background": {
+        "scripts": ["js/background.js"]
+    },
+
+    "browser_action": {
+        "default_title": "Abrowzer"
+    },
+
+    "icons": {
+        "128": "img/icon128.png"
     }
-  ],
-
-  "background" : {
-    "scripts" : ["js/background.js"]
-  },
-
-  "browser_action" : {
-    "default_title":"Abrowzer"
-  },
-
-  "icons":{
-    "16":"img/icon16.png"
-  }
 
 }
