@@ -31,7 +31,8 @@ window.bg = (function() {
                 imgurabone: null,
                 oekakiabone: null,
                 suretaiabone: null
-            }
+            },
+            imgurdelurls:[]
         }
     };
 
@@ -770,14 +771,14 @@ window.bg = (function() {
         return;
     }
 
-   function _extractURL(tab) {
+    function _extractURL(tab) {
         chrome.tabs.query({ title: "Abrowzer::Result" }, function(query) {
             if (query.length !== 0) {
                 chrome.tabs.update(query[0].id, { active: true });
                 alert("お手数ですがこのページは閉じてください。");
             } else {
                 chrome.tabs.create({ url: chrome.runtime.getURL("html/result.html") }, function(tab_result) {
-                    chrome.tabs.sendMessage(tab.id,{extracturl:"extracturl"},function(parm){
+                    chrome.tabs.sendMessage(tab.id, { extracturl: "extracturl" }, function(parm) {
                         //note: tabs.createしてからresult.jsがlistenするのにほんの少し時間がかかるので
                         //       2000ミリ秒ほど待機してからメッセージを送信する
                         chrome.alarms.create("send_to_result", { when: Date.now() + 2000 });
@@ -843,7 +844,7 @@ window.bg = (function() {
                 _execDownload(tab);
             }
 
-            if (info.menuItemId === "extracturl"){
+            if (info.menuItemId === "extracturl") {
                 _extractURL(tab);
             }
 
@@ -853,13 +854,42 @@ window.bg = (function() {
 
     function _assignBeforeRq() {
         chrome.webRequest.onBeforeRequest.addListener(function(parm) {
-            var urltemp = parm.url.match(/(^.*\/)test\/read\.cgi\/(.*)\/([0-9]{10})/);;
-            var url = urltemp[1] + urltemp[2] + "/dat/" + urltemp[3] + ".dat";
 
             if (_bgobj.preserve.contexts.mode === "simplemode") {
-                return { redirectUrl: url };
+                if (parm.url.match("read.cgi")) {
+                    return _redirectToDAT(parm);
+                }
             }
-        }, { urls: ["http://*.open2ch.net/test/read.cgi/*"] }, ["blocking"]);
+
+            if (parm.url.match("bbs.cgi")) {
+                _getImgurDelURL(parm);
+            }
+
+        }, { urls: ["http://*.open2ch.net/test/read.cgi/*", "http://*.open2ch.net/test/bbs.cgi*"] }, ["blocking"]);
+        return;
+    }
+
+    function _redirectToDAT(parm) {
+        var urltemp = parm.url.match(/(^.*\/)test\/read\.cgi\/(.*)\/([0-9]{10})/);
+        var url = urltemp[1] + urltemp[2] + "/dat/" + urltemp[3] + ".dat";
+        return { redirectUrl: url };
+    }
+
+    function _getImgurDelURL(parm) {
+        chrome.tabs.sendMessage(parm.tabId, { getimgurdelurl: "getimgurdelurl" }, function(response) {
+            console.dir(response);
+            var dels = response.imgur_delURLs;
+            if(dels){
+                console.log(dels);
+                for(var ix = 0, len = dels.length; ix < len; ix++){
+                    _bgobj.preserve.imgurdelurls.unshift(dels[ix]);
+                }
+                _saveLocalStorage(_bgobj);
+            }else{
+                console.log("nothing to save");
+            }
+
+        });
         return;
     }
 

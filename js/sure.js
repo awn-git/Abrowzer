@@ -69,7 +69,21 @@
                 for (var ix = 0, len = resobj.dd.length; ix < len; ix++) {
                     data.push({ text: resobj.dd[ix].innerHTML });
                 }
-                sendResponse({info: _info, data: data});
+                sendResponse({ info: _info, data: data });
+            }
+
+            if (parm.getimgurdelurl === "getimgurdelurl") {
+                var obj = {
+                    info: _info,
+                    imgur_delURLs: null
+                };
+                var imgur_delURLs = _getImgurDelURL();
+
+                if(imgur_delURLs.length){
+                    obj.imgur_delURLs = imgur_delURLs;
+                }
+
+                sendResponse(obj);
             }
 
             return;
@@ -253,6 +267,20 @@
         }
 
         return;
+    }
+
+    function _getImgurDelURL() {
+        var dlinks = document.querySelectorAll("div.dlink");
+        var dlink_regexp = new RegExp('<a target="_blank" href="(http://imgur.com/delete/.*?)">削除URL</a></font>');
+        var dlink_temp;
+        var imgur_delURL = [];
+        for (var ix = 0, len = dlinks.length; ix < len; ix++) {
+            dlink_temp = dlinks[ix].innerHTML;
+            if (dlink_temp.match(dlink_regexp)) {
+                imgur_delURL.push(dlink_temp.match(dlink_regexp)[1]);
+            }
+        }
+        return imgur_delURL;
     }
 
     return _info;
