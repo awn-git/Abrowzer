@@ -24,6 +24,11 @@
         "default_title": "Abrowzer"
     },
 
+    "options_ui": {
+        "page": "html/options.html",
+        "chrome_style": true
+    },
+
     "icons": {
         "128": "img/icon128.png"
     }
