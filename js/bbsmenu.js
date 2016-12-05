@@ -25,6 +25,9 @@
         b[ix].outerHTML = "<b>【" + b[ix].innerText + "】</b>";
     }
 
+    var base = d.getElementsByTagName("base")[0];
+    base.setAttribute("target","_self");
+
     var body = d.querySelector("body");
     body.removeAttribute("text");
     body.removeAttribute("bgcolor");
