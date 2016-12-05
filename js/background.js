@@ -12,7 +12,11 @@
 
 
 window.bg = (function() {
-    var _debug = true;
+    var _options = {
+        debug: "off",
+        key: null
+    };
+
     var _bgobj = {
         temporary: {},
         preserve: {
@@ -32,7 +36,13 @@ window.bg = (function() {
                 oekakiabone: null,
                 suretaiabone: null
             },
-            imgurdelurls:[]
+            imgurdelurls: [],
+            tenpure: {
+                title: "",
+                name: "",
+                mail: "",
+                text: ""
+            }
         }
     };
 
@@ -43,7 +53,8 @@ window.bg = (function() {
         ngids: "",
         ngsuretai: "",
         enableRegExp_sure: "no",
-        enableRegExp_suretai: "no"
+        enableRegExp_suretai: "no",
+        autosave_rireki: "yes"
     };
 
     var _defaultcontexts = {
@@ -374,6 +385,18 @@ window.bg = (function() {
                 _deleteFavorite(parm.favorite);
             }
 
+            if (parm.tenpure) {
+                _updateTenpure(parm.tenpure);
+            }
+
+            if (parm.autosave) {
+                _updateAutosave(parm.autosave);
+            }
+
+            if (parm.options) {
+                _updateOptions(parm.options);
+            }
+
             return;
         });
         return;
@@ -383,12 +406,12 @@ window.bg = (function() {
         chrome.browserAction.onClicked.addListener(function() {
             chrome.tabs.query({ title: "Abrowzer::ダッシュボード" }, function(response) {
                 if (response.length === 0) {
-                    chrome.tabs.create({ url: chrome.runtime.getURL("html/dashboard.html") }, function() {});
+                    chrome.tabs.update({ url: chrome.runtime.getURL("html/dashboard.html") }, function() {});
                 }
                 return;
             });
 
-            if (_debug) {
+            if (_options.debug === "on") {
                 chrome.tabs.query({ title: "Abrowzer::Storage Monitor" }, function(response) {
                     if (response.length === 0) {
                         chrome.tabs.create({ url: chrome.runtime.getURL("html/storagemonitor.html") }, function() {});
@@ -407,6 +430,24 @@ window.bg = (function() {
             _bgobj.preserve.dashboard[key] = obj[key];
         };
         _saveLocalStorage(_bgobj);
+        return;
+    }
+
+    function _updateTenpure(obj) {
+        _bgobj.preserve.tenpure = obj;
+        _saveLocalStorage(_bgobj);
+        return;
+    }
+
+    function _updateAutosave(str) {
+        _bgobj.preserve.dashboard.autosave_rireki = str;
+        _saveLocalStorage(_bgobj);
+        return;
+    }
+
+    function _updateOptions(obj) {
+        _options = obj;
+        console.dir(obj);
         return;
     }
 
@@ -567,7 +608,7 @@ window.bg = (function() {
     }
 
     function _storeHistory(pagetype, temp) {
-        if (temp) {
+        if (temp && _bgobj.preserve.dashboard.autosave_rireki === "yes") {
             var dupcheck = [];
             var isDup = true;
             dupcheck = _bgobj.preserve.history[pagetype].map(function(elm) {
@@ -667,7 +708,7 @@ window.bg = (function() {
     function _jumpToDashboard() {
         chrome.tabs.query({ title: "Abrowzer::ダッシュボード" }, function(response) {
             if (response.length === 0) {
-                chrome.tabs.create({ url: chrome.runtime.getURL("html/dashboard.html") }, function() {});
+                chrome.tabs.update({ url: chrome.runtime.getURL("html/dashboard.html") }, function() {});
             } else if (response.length === 1) {
                 chrome.tabs.update(response[0].id, { active: true });
             }
@@ -677,7 +718,7 @@ window.bg = (function() {
     }
 
     function _openBbsmenu() {
-        chrome.tabs.create({ url: "http://menu.open2ch.net/bbsmenu.html" }, function() {});
+        chrome.tabs.update({ url: "http://menu.open2ch.net/bbsmenu.html" }, function() {});
         return;
     }
 
@@ -877,15 +918,13 @@ window.bg = (function() {
 
     function _getImgurDelURL(parm) {
         chrome.tabs.sendMessage(parm.tabId, { getimgurdelurl: "getimgurdelurl" }, function(response) {
-            console.dir(response);
             var dels = response.imgur_delURLs;
-            if(dels){
-                console.log(dels);
-                for(var ix = 0, len = dels.length; ix < len; ix++){
+            if (dels) {
+                for (var ix = 0, len = dels.length; ix < len; ix++) {
                     _bgobj.preserve.imgurdelurls.unshift(dels[ix]);
                 }
                 _saveLocalStorage(_bgobj);
-            }else{
+            } else {
                 console.log("nothing to save");
             }
 

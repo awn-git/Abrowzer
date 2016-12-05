@@ -340,13 +340,13 @@
 
     function _assignIncrementalSearch(input_id, label, node_display, node_control) {
 
-        /* note: 
-            - input_id: (id) - 入力欄のid
-            - label: (class) - マッチング対象からremoveし、非マッチング対象にaddするclass
-            - node_display: (CSS Selector) - このノードにlavelをadd/removeする
-            - node_control: (CSS Selector) - このノードのinnerTextをマッチング対象とする
-              - ただし、node_control === undefinedの場合 node_displayを用いる
-        */
+        // note: 
+        //    - input_id: (id) - 入力欄のid
+        //    - label: (class) - マッチング対象からremoveし、非マッチング対象にaddするclass
+        //    - node_display: (CSS Selector) - このノードにlavelをadd/removeする
+        //    - node_control: (CSS Selector) - このノードのinnerTextをマッチング対象とする
+        //      - ただし、node_control === undefinedの場合 node_displayを用いる
+        //
 
         var d = document;
         var display = d.querySelectorAll(node_display);
@@ -358,15 +358,31 @@
         }
 
         var input_elm = d.getElementById(input_id);
-        var input_data;
-        var regexp;
+        var regexps;
+        var inputs = [];
+        var regexps = [];
+        var isMatch;
 
         input_elm.addEventListener("keyup", function() {
-            input_data = input_elm.value.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
-            regexp = new RegExp(input_data, "i");
+            inputs = input_elm.value.trim().replace(/　/g, " ").replace(/ +/g, " ").split(" ");
+            if (inputs[0]) {
+                regexps = inputs.map(function(elm) {
+                    elm = elm.replace(/([.*+?^=!:${}()|[\]\/\\])/g, "\\$1");
+                    return new RegExp(elm, "ig");
+                });
+            } else {
+                regexps = [new RegExp(/.*/, "g")];
+            }
 
             for (var ix = 0, len = display.length; ix < len; ix++) {
-                if (regexp.test(control[ix])) {
+
+                //note: Array#someの場合  -> OR検索となる
+                //      Array#everyの場合 -> AND検索となる
+                isMatch = regexps.every(function(elm) {
+                    return elm.test(control[ix]);
+                });
+
+                if (isMatch) {
                     display[ix].classList.remove(label);
                 } else {
                     display[ix].classList.add(label);
@@ -376,6 +392,7 @@
         });
         return;
     }
+    
 
     return _info;
 })();
