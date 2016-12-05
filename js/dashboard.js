@@ -63,6 +63,13 @@
         _saveConfig("configio-savebtn");
 
         _chooseAll("configio");
+
+        _viewAnotherPage("toku_surerireki");
+        _viewAnotherPage("toku_imgurdel");
+
+        _saveTenpure();
+        _saveAutosaveRireki();
+
         return;
     }
 
@@ -76,6 +83,8 @@
             _setConfig(bg.preserve.dashboard);
             _setFavorite(bg.preserve.favorite);
             _setHistory(bg.preserve.history);
+            _setTenpure(bg.preserve.tenpure);
+
         });
         return;
     }
@@ -369,7 +378,8 @@
 
             //JSON文字列でないなら終了
             try {
-                var myconfig = JSON.parse(myconfigJ); } catch (e) {
+                var myconfig = JSON.parse(myconfigJ);
+            } catch (e) {
                 alert("入力文字列の形式がおかしいです。。");
                 return;
             }
@@ -381,10 +391,14 @@
                 isPropSame_d2m = false;
             isPropSame_m2d = defaultkeys.every(function(elm) {
                 return myconkeys.find(function(inelm) {
-                    return inelm === elm; }) });
+                    return inelm === elm;
+                })
+            });
             isPropSame_d2m = myconkeys.every(function(elm) {
                 return defaultkeys.find(function(inelm) {
-                    return inelm === elm; }) });
+                    return inelm === elm;
+                })
+            });
 
             if (!(isPropSame_m2d && isPropSame_d2m)) {
                 alert("存在しない項目を設定 or 存在する項目を未設定なようです。。");
@@ -427,6 +441,61 @@
         elm.addEventListener("focus", function() {
             elm.select();
         });
+        return;
+    }
+
+    function _viewAnotherPage(id) {
+        var elm = document.getElementById(id);
+        elm.addEventListener("click", function(ev) {
+            ev.preventDefault();
+            //chrome.tabs.create({url: "http://google.com"});
+            alert("準備中です。。");
+            return;
+        });
+        return;
+    }
+
+    function _saveTenpure() {
+        var elm = document.getElementById("tenpure_savevtn");
+        var fm = _getForm("main");
+        var obj = {
+            title: null,
+            name: null,
+            mail: null,
+            text: null
+        };
+
+        elm.addEventListener("click", function(ev) {
+            if (confirm("保存しますか？")) {
+                obj.title = fm["tenpure_title"].value;
+                obj.name = fm["tenpure_name"].value;
+                obj.mail = fm["tenpure_mail"].value;
+                obj.text = fm["tenpure_text"].value;
+                _sendMessageToBackground({ tenpure: obj });
+            }
+            return;
+        });
+    }
+
+    function _setTenpure(obj) {
+        var fm = _getForm("main");
+        fm["tenpure_title"].value = obj.title;
+        fm["tenpure_name"].value = obj.name;
+        fm["tenpure_mail"].value = obj.mail;
+        fm["tenpure_text"].value = obj.text;
+
+        return;
+    }
+
+    function _saveAutosaveRireki() {
+        var elm = document.getElementById("autosave_rirekibtn");
+        elm.addEventListener("click", function(ev) {
+            if (confirm("保存しますか？")) {
+                var fm = _getForm("main");
+                var enableAutosave = fm["autosave_rireki"].value;
+                _sendMessageToBackground({ autosave: enableAutosave });
+            }
+        })
         return;
     }
 

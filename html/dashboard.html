@@ -66,7 +66,8 @@
                                 <select id="enableRegExp_sure" name="enableRegExp_sure">
                                     <option value="no">単純なNGキーワードとして入力する</option>
                                     <option value="yes">正規表現として入力する</option>
-                                </select><br>
+                                </select>
+                                <br>
                                 <small class="text-muted">( ※正規表現って何？な人　→　<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Regular_Expressions" target="_blank">【MDN】正規表現</a> )</small>
                             </div>
                             <div>
@@ -102,7 +103,8 @@
                                 <select id="enableRegExp_suretai" name="enableRegExp_suretai">
                                     <option value="no">単純なNGキーワードとして入力する</option>
                                     <option value="yes">正規表現として入力する</option>
-                                </select><br>
+                                </select>
+                                <br>
                                 <small class="text-muted">( ※正規表現って何？な人　→　<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Regular_Expressions" target="_blank">【MDN】正規表現</a> )</small> </div>
                             <div>
                                 <label for="ngsuretai">NGスレタイ：</label>
@@ -161,38 +163,69 @@
                     <div>
                         <a name="other"><h1 class="invisible">その他</h1></a>
                         <h1 class="page-header">その他</h1>
-                        <h3 class="sub-header text-info">設定の読み込み/書き出し</h3>
                         <div>
-                            <div>
-                                <textarea id="configio" name="configio" cols="40" rows="4" placeholder="" ></textarea>
+                            <h3 class="sub-header text-info">履歴特別ページ</h3>
+                            <div><a href="" id='toku_surerireki'>★閲覧スレ履歴</a><br>
+                                <a href="" id='toku_imgurdel'>★imgur削除URL</a>
                             </div>
+                            <h3 class="sub-header text-info">履歴自動記録</h3>
                             <div>
-                                <button type="button" id="configio-savebtn" class="btn btn-primary">設定を読み込む</button>
-                                <button type="button" id="configio-loadbtn" class="btn btn btn-success">設定を書き出す</button>
+                                <label for="autosave_rireki">履歴は自動で：</label>
+                                <select id="autosave_rireki" name="autosave_rireki">
+                                    <option value="no">記録しない</option>
+                                    <option value="yes">記録する</option>
+                                </select>
+                                <div>
+                                    <button type="button" id="autosave_rirekibtn" class="btn btn-primary">保存する</button>
+                                </div>
+                            </div>
+                            <h3 class="sub-header text-info">テンプレくん</h3> タイトル：
+                            <input type='text' size='70' id='tenpure_title' name='tenpure_title'></input>
+                            <br> 名前：
+                            <input type='text' size='38' id='tenpure_name' name='tenpure_name'></input>
+                            mail：
+                            <input type='text' size='28' id='tenpure_mail' name='tenpure_mail'></input>
+                            <br>
+                            <textarea cols="80" rows="4" placeholder="テンプレートとして保存したい本文をここに書いてください" id='tenpure_text' name='tenpure_text'></textarea>
+                            <div>
+                                <div>
+                                    <button type="button" id="tenpure_savevtn" class="btn btn-primary">保存する</button>
+                                </div>
+                            </div>
+                            <h3 class="sub-header text-info">設定の読み込み/書き出し</h3>
+                            <div>
+                                <div>
+                                    <textarea id="configio" name="configio" cols="40" rows="4" placeholder="NG設定をJSON形式で読み込み/書き出しします。"></textarea>
+                                </div>
+                                <div>
+                                    <button type="button" id="configio-savebtn" class="btn btn-primary">設定を読み込む</button>
+                                    <button type="button" id="configio-loadbtn" class="btn btn btn-success">設定を書き出す</button>
+                                </div>
+                                <br>
+                            </div>
+                            <h3 class="sub-header text-info">初期化</h3>
+                            <div>
+                                NG設定を初期化します。
+                                <br>
+                                <button type="button" id="init-btn" class="btn btn-danger">初期化する</button>
                             </div>
                             <br>
+                            <br>
                         </div>
-                        <h3 class="sub-header text-info">初期化</h3>
-                        <div>
-                            <button type="button" id="init-btn" class="btn btn-danger">初期化する</button>
-                        </div>
-                        <br>
-                        <br>
                     </div>
+                </form>
+                <!-- /main -->
             </div>
-            </form>
-            <!-- /main -->
+            <!-- /row -->
         </div>
-        <!-- /row -->
-    </div>
-    <!-- /container-fluid -->
-    <!-- Bootstrap core JavaScript
+        <!-- /container-fluid -->
+        <!-- Bootstrap core JavaScript
     ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="../bootstrap/js/jQuery.min.js"></script>
-    <script src="../bootstrap/js/bootstrap.min.js"></script>
-    <!-- <script src="../js/lib/holder.min.js"></script> -->
-    <script src="../js/dashboard.js"></script>
+        <!-- Placed at the end of the document so the pages load faster -->
+        <script src="../bootstrap/js/jQuery.min.js"></script>
+        <script src="../bootstrap/js/bootstrap.min.js"></script>
+        <!-- <script src="../js/lib/holder.min.js"></script> -->
+        <script src="../js/dashboard.js"></script>
 </body>
 
 </html>
